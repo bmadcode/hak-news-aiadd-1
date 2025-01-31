@@ -39,7 +39,24 @@ When writing code, you MUST follow these rules:
    - One class/interface per file
    - PascalCase for types/interfaces
    - camelCase for variables/functions
-   - kebab-case for file names
+   - kebab-case for file name
+
+## Formatting
+   - Always run Prettier before saving
+   - Prettier must be configured as ESLint plugin to prevent rule collisions
+   - Use 2 spaces for indentation
+   - Max line length: 120 characters
+   - Single quotes for strings
+   - Trailing commas in multi-line objects/arrays
+   - Semicolons never
+   - EOF new line
+
+## TypeScript
+   - No explicit `any` types
+   - Always type function returns
+   - Use `interface` over `type` for objects
+   - Enforce readonly for immutable data
+   - Prefer `const` over `let`
 
 ## Types and Interfaces
 

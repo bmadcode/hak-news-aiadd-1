@@ -3,9 +3,9 @@ description:
 globs: *.md, docs/*.*
 ---
 
-# Your rule content
+# Doc Rules
 
-- When writing documentation, README's, technical writing, technical documentation, always follow Google's Technical Writing Style Guide.
+- Follow Google's Technical Writing Style Guide.
 - Define terminology when needed
 - Use present tense and active voice
 - Write in a clear and concise manner
