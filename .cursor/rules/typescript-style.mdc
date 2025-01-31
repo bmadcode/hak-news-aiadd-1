@@ -1,0 +1,54 @@
+---
+description: 
+globs: *.ts
+---
+# Typescript Code Style Rules
+
+When writing code, you MUST follow these rules:
+- USE TDD and write tests for all code.
+- Follow best practices of NestJS, Clean Code, and lean towards agile methodologies.
+- Prioritize modularity, DRY, performance, and security.
+- Use the latest versions of libraries and tools.
+- Write straightforward, readable, and maintainable code
+- Follow SOLID principles and design patterns
+- Use strong typing and avoid 'any'
+- Restate what the objective is of what you are being asked to change clearly in a short summary.
+
+## Naming Conventions
+
+- Classes: PascalCase
+- Variables, functions, methods: camelCase
+- Files, directories: kebab-case
+- Constants, env variables: UPPER_CASE
+
+## Functions
+
+- Use descriptive names: verbs & nouns (e.g., getUserData)
+- Prefer arrow functions for simple operations
+- Use default parameters and object destructuring
+- Document with JSDoc
+- Unit Test All Public Functions
+- Avoid nesting functions more than 2 levels deep.
+
+## Error Handling
+   - Use `try/catch` with typed errors
+   - Log errors with context
+   - Throw custom error classes
+
+## File Structure
+   - One class/interface per file
+   - PascalCase for types/interfaces
+   - camelCase for variables/functions
+   - kebab-case for file names
+
+## Types and Interfaces
+
+- For any new types, prefer to create a Zod schema, and zod inference type for the created schema.
+- Create custom types/interfaces for complex structures
+- Use 'readonly' for immutable properties
+- If an import is only used as a type in the file, use 'import type' instead of 'import'
+
+## Comments
+
+- When writing JSDocs, only use TypeDoc compatible tags.
+- Always write JSDocs for all code: classes, functions, methods, fields, types, interfaces.

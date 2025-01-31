@@ -1,0 +1,14 @@
+---
+description: unit testing rules
+globs: *.test.ts, *.spec.ts
+---
+
+# Your rule content
+
+- Use Jest for unit testing
+- Only create mock variables you will use
+- Properly type all test data
+- Use BDD style language in describe and it blocks
+- Handle edge cases
+- Unit tests for every public function.
+- Test doubles for dependencies, except inexpensive third-party calls.

@@ -1,0 +1,14 @@
+---
+description: 
+globs: *.md, docs/*.*
+---
+
+# Your rule content
+
+- When writing documentation, README's, technical writing, technical documentation, always follow Google's Technical Writing Style Guide.
+- Define terminology when needed
+- Use present tense and active voice
+- Write in a clear and concise manner
+- Present information in a logical order
+- Use lists and tables when appropriate
+- Use Mermaid diagrams when appropriate
