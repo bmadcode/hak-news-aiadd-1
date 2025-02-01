@@ -95,8 +95,8 @@ export class HackerNewsService {
     storyId: number,
     numComments: number,
   ): Promise<SummarizedContent> {
-    if (numComments < 0 || numComments > 50) {
-      throw new Error('Number of comments must be between 0 and 50');
+    if (numComments < 0 || numComments > 100) {
+      throw new Error('Number of comments must be between 0 and 100');
     }
 
     this.logger.debug(`Fetching ${numComments} comments for story ${storyId}`);

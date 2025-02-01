@@ -6,6 +6,8 @@ import { HackerNewsService } from './hacker-news.service';
 import { HackerNewsController } from './hacker-news.controller';
 import { ArticleScraperService } from './services/article-scraper.service';
 import { LLMService } from './services/llm.service';
+import { EmailService } from './services/email.service';
+import { EmailTemplateService } from './services/email-template.service';
 
 @Module({
   imports: [
@@ -17,7 +19,13 @@ import { LLMService } from './services/llm.service';
     ConfigModule,
   ],
   controllers: [HackerNewsController],
-  providers: [HackerNewsService, ArticleScraperService, LLMService],
-  exports: [HackerNewsService],
+  providers: [
+    HackerNewsService,
+    ArticleScraperService,
+    LLMService,
+    EmailService,
+    EmailTemplateService,
+  ],
+  exports: [HackerNewsService, EmailService],
 })
 export class HackerNewsModule {}

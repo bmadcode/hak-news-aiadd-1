@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .story-title {
+            text-align: center;
+            font-weight: bold;
+            margin: 20px 0;
+        }
+        .divider {
+            text-align: center;
+            margin: 20px 0;
+            color: #666;
+        }
+        .footer {
+            margin-top: 30px;
+            text-align: center;
+            color: #666;
+        }
+        a {
+            color: #2c3e50;
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <p>This is the Daily Hacker News Top Summary from BMad for <%= date %></p>
+
+    <% stories.forEach((story, index) => { %>
+        <div class="story-title">Story <%= index + 1 %></div>
+        <p><a href="<%= story.url %>"><%= story.title %></a></p>
+        <p>Story <%= index + 1 %> Summary: <%= story.articleSummary.summary %></p>
+        <p>Story <%= index + 1 %> Comment Summary: <%= story.commentsSummary.summary %></p>
+        <div class="divider">***</div>
+    <% }); %>
+
+    <div class="footer">
+        <p>Thank you for subscribing to the BMad Hacker News Summary</p>
+        <p>- Brian BMad Madison</p>
+        <p>You can unsubscribe at any time by clicking the link below</p>
+        <p><a href="https://www.youtube.com/watch?v=dQw4w9WgXcQ">Unsubscribe</a></p>
+    </div>
+</body>
+</html> 

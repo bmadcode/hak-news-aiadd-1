@@ -155,8 +155,8 @@ describe('HackerNewsService', () => {
     });
 
     it('should throw an error if numComments is out of range', async () => {
-      await expect(service.getStoryComments(123, 51)).rejects.toThrow(
-        'Number of comments must be between 0 and 50',
+      await expect(service.getStoryComments(123, 101)).rejects.toThrow(
+        'Number of comments must be between 0 and 100',
       );
     });
   });

@@ -8,6 +8,8 @@ import { ArticleScraperService } from './services/article-scraper.service';
 import { SummarizedStoriesRequestDto } from './dto/summarized-stories.dto';
 import { HttpException, HttpStatus } from '@nestjs/common';
 import { LLMService } from './services/llm.service';
+import { EmailService } from './services/email.service';
+import { EmailTemplateService } from './services/email-template.service';
 
 interface HNComment {
   id: number;
@@ -87,6 +89,8 @@ describe('HackerNewsController', () => {
           },
         },
         ArticleScraperService,
+        EmailService,
+        EmailTemplateService,
       ],
     }).compile();
 

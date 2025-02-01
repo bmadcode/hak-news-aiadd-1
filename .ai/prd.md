@@ -73,6 +73,7 @@ Create a service that sends daily summaries of the top **M** stories along with 
           ***
 
           Thank you for subscribing to the BMad Hacker News Summary
+          - Brian BMad Madison
 
           You can unsubscribe at any time by clicking the link below
 

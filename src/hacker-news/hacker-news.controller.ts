@@ -12,17 +12,21 @@ import {
   SummarizedStoriesRequestDto,
   SummarizedStoriesResponseDto,
 } from './dto/summarized-stories.dto';
+import { EmailService } from './services/email.service';
 
 @ApiTags('hacker-news')
-@Controller('api/v1/hacker-news')
+@Controller('hacker-news')
 export class HackerNewsController {
   private readonly logger = new Logger(HackerNewsController.name);
 
-  constructor(private readonly hackerNewsService: HackerNewsService) {}
+  constructor(
+    private readonly hackerNewsService: HackerNewsService,
+    private readonly emailService: EmailService,
+  ) {}
 
-  @Post('summarized-stories')
+  @Post('summarize')
   @ApiOperation({
-    summary: 'Get AI-summarized top Hacker News stories with comments',
+    summary: 'Get summarized Hacker News stories',
     description: `
 Retrieves and summarizes top Hacker News stories and their comments using AI.
 - Fetches the most recent top stories from Hacker News
@@ -34,14 +38,14 @@ Retrieves and summarizes top Hacker News stories and their comments using AI.
     `,
   })
   @ApiResponse({
-    status: 201,
-    description: 'Successfully retrieved and summarized stories and comments',
+    status: 200,
+    description: 'Stories successfully summarized',
     type: SummarizedStoriesResponseDto,
   })
   @ApiResponse({
     status: 400,
     description:
-      'Invalid request parameters. Ensure:\n- numStories is between 1 and 10\n- numCommentsPerStory is between 0 and 20\n- maxSummaryLength is between 50 and 500 words',
+      'Invalid request parameters. Ensure:\n- numStories is between 1 and 10\n- numCommentsPerStory is between 0 and 100\n- maxSummaryLength is between 50 and 500 words',
   })
   @ApiResponse({
     status: 429,
@@ -57,9 +61,7 @@ Retrieves and summarizes top Hacker News stories and their comments using AI.
     status: 504,
     description: 'Gateway timeout. Request took too long to process.',
   })
-  async getSummarizedStories(
-    @Body() request: SummarizedStoriesRequestDto,
-  ): Promise<SummarizedStoriesResponseDto> {
+  async getSummarizedStories(@Body() request: SummarizedStoriesRequestDto) {
     const startTime = Date.now();
 
     try {
@@ -70,9 +72,12 @@ Retrieves and summarizes top Hacker News stories and their comments using AI.
           HttpStatus.BAD_REQUEST,
         );
       }
-      if (request.numCommentsPerStory < 0 || request.numCommentsPerStory > 20) {
+      if (
+        request.numCommentsPerStory < 0 ||
+        request.numCommentsPerStory > 100
+      ) {
         throw new HttpException(
-          'Number of comments must be between 0 and 20',
+          'Number of comments must be between 0 and 100',
           HttpStatus.BAD_REQUEST,
         );
       }
@@ -99,25 +104,15 @@ Retrieves and summarizes top Hacker News stories and their comments using AI.
 
           // Generate article summary using URL if available, otherwise use title
           const articleSummary = story.url
-            ? await this.hackerNewsService
-                .summarizeContent(
-                  story.url,
-                  request.maxSummaryLength,
-                  request.includeOriginalContent,
-                )
-                .catch(() => ({
-                  summary: `${story.title} from ${story.url} unretrievable, try yourself by visiting the link.`,
-                  summaryGeneratedAt: new Date().toISOString(),
-                  tokenCount: 0,
-                  ...(request.includeOriginalContent && {
-                    originalContent: '',
-                  }),
-                }))
+            ? await this.hackerNewsService.summarizeContent(
+                story.url,
+                request.maxSummaryLength,
+                request.includeOriginalContent,
+              )
             : {
-                summary: `${story.title} (no URL provided)`,
+                summary: 'No URL available for this story.',
                 summaryGeneratedAt: new Date().toISOString(),
                 tokenCount: 0,
-                ...(request.includeOriginalContent && { originalContent: '' }),
               };
 
           return {
@@ -143,7 +138,10 @@ Retrieves and summarizes top Hacker News stories and their comments using AI.
           fetchedAt: new Date().toISOString(),
           processingTimeMs: Date.now() - startTime,
           storiesRetrieved: summarizedStories.length,
-          totalCommentsRetrieved: summarizedStories.length, // Each story has one comment summary
+          totalCommentsRetrieved: summarizedStories.reduce(
+            (acc, story) => acc + (story.descendants || 0),
+            0,
+          ),
           totalTokensUsed: totalTokens,
         },
       };
@@ -163,5 +161,16 @@ Retrieves and summarizes top Hacker News stories and their comments using AI.
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
+  }
+
+  @Post('newsletter')
+  @ApiOperation({ summary: 'Send Hacker News newsletter to specified emails' })
+  @ApiResponse({ status: 200, description: 'Newsletter sent successfully' })
+  async sendNewsletter(
+    @Body() request: SummarizedStoriesRequestDto & { emails: string[] },
+  ) {
+    const summaries = await this.getSummarizedStories(request);
+    await this.emailService.sendNewsletterEmail(request.emails, summaries);
+    return { message: 'Newsletter sent successfully' };
   }
 }
