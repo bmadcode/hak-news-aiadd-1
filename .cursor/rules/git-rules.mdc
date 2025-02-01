@@ -1,8 +1,7 @@
 ---
 description: rules to help the ai with git commits
-globs: *.*
+globs: 
 ---
-
 # Git Rules
 
 - Make the head / title of the commit message brief

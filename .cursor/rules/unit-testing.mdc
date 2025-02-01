@@ -1,9 +1,8 @@
 ---
 description: unit testing rules
-globs: *.test.ts, *.spec.ts
+globs: **/*.test.ts, **/*.spec.ts
 ---
-
-# Your rule content
+For All Unit Tests:
 
 - Use Jest for unit testing
 - Only create mock variables you will use

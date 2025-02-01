@@ -1,155 +1,99 @@
-# HakNews Summarizer
+<p align="center">
+  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
+</p>
 
-A sophisticated service that delivers AI-powered summaries of Hacker News stories and discussions.
+[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
+[circleci-url]: https://circleci.com/gh/nestjs/nest
 
-## Table of Contents
+  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
+    <p align="center">
+<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
+<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
+<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
+<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
+<a href="https://coveralls.io/github/nestjs/nest?branch=master" target="_blank"><img src="https://coveralls.io/repos/github/nestjs/nest/badge.svg?branch=master#9" alt="Coverage" /></a>
+<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
+<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
+<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
+  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
+    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
+  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
+</p>
+  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
+  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
 
-- [HakNews Summarizer](#haknews-summarizer)
-  - [Table of Contents](#table-of-contents)
-  - [Overview](#overview)
-  - [Features](#features)
-  - [Getting Started](#getting-started)
-    - [Prerequisites](#prerequisites)
-    - [Installation](#installation)
-  - [Testing](#testing)
-  - [API Documentation](#api-documentation)
-  - [Tech Stack](#tech-stack)
-    - [Backend](#backend)
-    - [Testing Framework](#testing-framework)
-    - [Infrastructure (AWS)](#infrastructure-aws)
-    - [Additional Tools](#additional-tools)
-  - [Technologies Used](#technologies-used)
-  - [Contributing](#contributing)
-  - [License](#license)
-  - [Acknowledgments](#acknowledgments)
+## Description
 
-## Overview
+[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
 
-HakNews Summarizer is a sophisticated service that delivers daily summaries of top Hacker News stories and their discussions. It leverages AI to provide concise, meaningful summaries of both articles and community discussions, making it easier to stay informed about the tech world's most engaging conversations.
-
-## Features
-
-- 🔍 Retrieves top stories from Hacker News API
-- 📝 AI-powered summarization of articles and comments
-- 📧 Email delivery of daily summaries
-- 🔐 Secure API access with API key authentication
-- 🚀 Serverless architecture using AWS services
-
-## Getting Started
-
-### Prerequisites
-
-- Node.js 22
-- AWS Account (Free Tier compatible)
-- Gmail account for email service
-- AWS CLI configured locally
-
-### Installation
-
-1. Clone the repository:
-
-   ```bash
-   git clone [repository-url]
-   cd haknews
-   ```
-
-2. Install dependencies:
-
-   ```bash
-   npm install
-   ```
-
-3. Configure environment variables:
-
-   ```bash
-   cp .env.example .env.local
-   # Edit .env.local with your configuration
-   ```
-
-4. Start the development server:
-   ```bash
-   npm run start:dev
-   ```
-
-## Testing
-
-Run different types of tests:
+## Project setup
 
 ```bash
-# Unit tests
-npm run test
-
-# E2E tests
-npm run test:e2e
-
-# Test coverage
-npm run test:cov
+$ npm install
 ```
 
-## API Documentation
+## Compile and run the project
 
-The API provides the following main endpoints:
+```bash
+# development
+$ npm run start
 
-- `GET /api/stories` - Retrieve top Hacker News stories
-- `POST /api/summarize` - Get AI-summarized stories and comments
-- Additional documentation available in the API documentation
+# watch mode
+$ npm run start:dev
 
-## Tech Stack
+# production mode
+$ npm run start:prod
+```
 
-### Backend
+## Run tests
 
-- **NestJS** - Progressive Node.js framework
-- **TypeScript** - Type-safe development
-- **Node.js 22** - JavaScript runtime
-- **AWS SDK V3** - AWS service integration
+```bash
+# unit tests
+$ npm run test
 
-### Testing Framework
+# e2e tests
+$ npm run test:e2e
 
-- **Jest** - Unit testing framework
-- **Playwright** - End-to-end testing
+# test coverage
+$ npm run test:cov
+```
 
-### Infrastructure (AWS)
+## Deployment
 
-- **CDK** - Infrastructure as Code
-- **Lambda** - Serverless compute
-- **DynamoDB** - NoSQL database
-- **API Gateway** - API management
-- **CloudWatch** - Monitoring and logging
-- **SQS** - Message queuing
+When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
 
-### Additional Tools
+If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
 
-- **Zod** - Schema validation
-- **Deepseek R1** - LLM for content summarization
-- **Nodemailer** - Email service integration
+```bash
+$ npm install -g mau
+$ mau deploy
+```
 
-## Technologies Used
+With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
 
-[![NestJS](https://img.shields.io/badge/NestJS-E0234E?style=flat&logo=nestjs&logoColor=white)](https://nestjs.com/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=flat&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
-[![Node.js](https://img.shields.io/badge/Node.js_22-339933?style=flat&logo=node.js&logoColor=white)](https://nodejs.org/)
-[![AWS](https://img.shields.io/badge/AWS-232F3E?style=flat&logo=amazon-aws&logoColor=white)](https://aws.amazon.com/)
-[![Jest](https://img.shields.io/badge/Jest-C21325?style=flat&logo=jest&logoColor=white)](https://jestjs.io/)
-[![Playwright](https://img.shields.io/badge/Playwright-45ba4b?style=flat&logo=playwright&logoColor=white)](https://playwright.dev/)
+## Resources
 
-## Contributing
+Check out a few resources that may come in handy when working with NestJS:
 
-1. Fork the repository
-2. Create your feature branch: `git checkout -b feature/amazing-feature`
-3. Commit your changes: `git commit -m 'Add amazing feature'`
-4. Push to the branch: `git push origin feature/amazing-feature`
-5. Open a Pull Request
+- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
+- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
+- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
+- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
+- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
+- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
+- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
+- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+
+## Support
+
+Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+
+## Stay in touch
+
+- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
+- Website - [https://nestjs.com](https://nestjs.com/)
+- Twitter - [@nestframework](https://twitter.com/nestframework)
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## Acknowledgments
-
-- [Hacker News API](https://github.com/HackerNews/API)
-- [NestJS Documentation](https://docs.nestjs.com/)
-- The amazing open-source community
-
----
-
-_"Efficiency is essential for success." - Lt. Commander Data_
+Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).

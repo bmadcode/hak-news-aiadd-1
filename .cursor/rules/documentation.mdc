@@ -1,8 +1,7 @@
 ---
 description: 
-globs: *.md, docs/*.*
+globs: **/*.md, docs/*.*, .ai/prd.md
 ---
-
 # Doc Rules
 
 - Follow Google's Technical Writing Style Guide.

@@ -1,3 +1,8 @@
+---
+description: story template
+globs: 
+---
+Apply the following template when creating story files:
 
 # Story {N}: {Title}
 ## Story

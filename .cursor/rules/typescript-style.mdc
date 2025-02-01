@@ -1,6 +1,6 @@
 ---
 description: 
-globs: *.ts
+globs: **/*.ts
 ---
 # Typescript Code Style Rules
 
@@ -27,7 +27,6 @@ When writing code, you MUST follow these rules:
 - Prefer arrow functions for simple operations
 - Use default parameters and object destructuring
 - Document with JSDoc
-- Unit Test All Public Functions
 - Avoid nesting functions more than 2 levels deep.
 
 ## Error Handling
@@ -69,3 +68,33 @@ When writing code, you MUST follow these rules:
 
 - When writing JSDocs, only use TypeDoc compatible tags.
 - Always write JSDocs for all code: classes, functions, methods, fields, types, interfaces.
+
+## Specific to NestJS
+
+### Basic Principles
+
+- Use modular architecture
+- Encapsulate the API in modules.
+  - One module per main domain/route.
+  - One controller for its route.
+  - And other controllers for secondary routes.
+  - A models folder with data types.
+  - DTOs validated with class-validator for inputs.
+  - Declare simple types for outputs.
+  - A services module with business logic and persistence.
+  - Entities with MikroORM for data persistence.
+  - One service per entity.
+- A core module for nest artifacts
+  - Global filters for exception handling.
+  - Global middlewares for request management.
+  - Guards for permission management.
+  - Interceptors for request management.
+- A shared module for services shared between modules.
+  - Utilities
+  - Shared business logic
+
+### Testing
+
+- Use the standard Jest framework for testing.
+- Write tests for each controller and service.
+- Write end to end tests for each api module.
