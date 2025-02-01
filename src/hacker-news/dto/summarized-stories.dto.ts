@@ -15,9 +15,9 @@ export class SummarizedStoriesRequestDto {
   numStories: number;
 
   @ApiProperty({
-    description: 'Number of comments to fetch and summarize per story (0-20)',
+    description: 'Number of comments to fetch and summarize per story (0-50)',
     minimum: 0,
-    maximum: 20,
+    maximum: 50,
   })
   @IsInt()
   @Min(0)
@@ -29,13 +29,13 @@ export class SummarizedStoriesRequestDto {
     description: 'Maximum length of article summary in words',
     minimum: 50,
     maximum: 500,
-    default: 200,
+    default: 300,
   })
   @IsInt()
   @Min(50)
   @Max(500)
   @Type(() => Number)
-  maxSummaryLength: number = 200;
+  maxSummaryLength: number = 300;
 
   @ApiProperty({
     description: 'Whether to include original content alongside summaries',

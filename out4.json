@@ -1,0 +1,5 @@
+
+> hak-news@0.1.0 summarize:prod
+> curl -X POST https://p23e17axci.execute-api.us-east-1.amazonaws.com/prod/api/v1/hacker-news/summarized-stories -H 'Content-Type: application/json'
+
+{"message":"Forbidden"}

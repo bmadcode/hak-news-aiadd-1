@@ -22,8 +22,10 @@
     "test:e2e:prod": "TEST_ENV=prod playwright test",
     "deploy": "cd infrastructure && npm run deploy",
     "diff": "cd infrastructure && npm run diff",
-    "summarize": "curl -X POST http://localhost:3000/api/v1/hacker-news/summarized-stories -H 'Content-Type: application/json' -d '{\"numStories\": 1, \"numCommentsPerStory\": 5, \"maxSummaryLength\": 300}'",
-    "summarize:prod": "curl -X POST $API_URL/api/v1/hacker-news/summarized-stories -H 'Content-Type: application/json' -H 'x-api-key: '$API_KEY -d '{\"numStories\": 1, \"numCommentsPerStory\": 1, \"maxSummaryLength\": 200}'"
+    "summarize": "curl -X POST http://localhost:3000/api/v1/hacker-news/summarized-stories -H 'Content-Type: application/json' -d '{\"numStories\": 10, \"numCommentsPerStory\": 20, \"maxSummaryLength\": 300}'",
+    "summarize:prod": "node scripts/summarize-prod.js",
+    "summarize:prod:quick": "node scripts/summarize-prod.js 3 5 200",
+    "summarize:prod:detailed": "node scripts/summarize-prod.js 5 20 500"
   },
   "dependencies": {
     "@nestjs/axios": "^3.0.1",
@@ -61,6 +63,7 @@
     "@types/node": "^20.3.1",
     "@typescript-eslint/eslint-plugin": "^6.0.0",
     "@typescript-eslint/parser": "^6.0.0",
+    "dotenv": "^16.4.7",
     "eslint": "^8.42.0",
     "eslint-config-prettier": "^9.0.0",
     "eslint-plugin-prettier": "^5.0.0",

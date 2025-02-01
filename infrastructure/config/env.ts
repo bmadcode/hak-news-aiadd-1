@@ -16,7 +16,7 @@ export const envSchema = z.object({
   HN_API_RATE_LIMIT: z.number().default(500),
   // LLM Settings
   LLM_API_KEY: z.string(),
-  LLM_API_URL: z.string(),
+  LLM_API_ENDPOINT: z.string(),
   LLM_MODEL: z.string(),
   // Email Settings
   SMTP_HOST: z.string(),
@@ -41,7 +41,7 @@ export const devConfig: EnvConfig = {
   HN_API_BASE_URL: 'https://hacker-news.firebaseio.com/v0',
   HN_API_RATE_LIMIT: 500,
   LLM_API_KEY: process.env.LLM_API_KEY || '',
-  LLM_API_URL: process.env.LLM_API_URL || '',
+  LLM_API_ENDPOINT: process.env.LLM_API_ENDPOINT || '',
   LLM_MODEL: process.env.LLM_MODEL || '',
   SMTP_HOST: process.env.SMTP_HOST || '',
   SMTP_PORT: Number(process.env.SMTP_PORT) || 587,

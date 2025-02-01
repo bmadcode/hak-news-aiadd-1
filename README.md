@@ -1,12 +1,13 @@
-# HakNews - AI-Powered Hacker News Digest Service
+# Hakata34 - Code Kata for Agentic Driven Development: AI-Powered Hacker News Digest Service
 
-[![Project Status: Active](https://img.shields.io/badge/Project%20Status-Active-green.svg)](https://github.com/yourusername/haknews)
+[![Project Status: 75% Feature Complete](https://img.shields.io/badge/Project%20Status-Active-green.svg)](https://github.com/bmadcode/hakata34)
 
 ## Table of Contents
 
-- [HakNews - AI-Powered Hacker News Digest Service](#haknews---ai-powered-hacker-news-digest-service)
+- [Hakata34 - Code Kata for Agentic Driven Development: AI-Powered Hacker News Digest Service](#hakata34---code-kata-for-agentic-driven-development-ai-powered-hacker-news-digest-service)
   - [Table of Contents](#table-of-contents)
   - [Project Overview](#project-overview)
+  - [Features](#features)
   - [HAKATA - HackerNews AI Agent KATA](#hakata---hackernews-ai-agent-kata)
     - [What is a Kata?](#what-is-a-kata)
     - [The AI Agentic PRD Story Workflow](#the-ai-agentic-prd-story-workflow)
@@ -18,10 +19,17 @@
     - [AWS Services (Free Tier)](#aws-services-free-tier)
     - [Testing \& Quality](#testing--quality)
     - [AI \& Utilities](#ai--utilities)
+  - [API Documentation](#api-documentation)
+    - [Endpoints](#endpoints)
+    - [Example Response](#example-response)
   - [Getting Started](#getting-started)
     - [Prerequisites](#prerequisites)
-    - [Local Development Setup](#local-development-setup)
-    - [Running Tests](#running-tests)
+    - [Environment Variables](#environment-variables)
+    - [Installation](#installation)
+    - [Available Commands](#available-commands)
+      - [Development Commands](#development-commands)
+      - [Story Summarization Commands](#story-summarization-commands)
+      - [Deployment Commands](#deployment-commands)
   - [Architecture](#architecture)
     - [System Overview](#system-overview)
     - [Key Components](#key-components-1)
@@ -34,6 +42,15 @@
 ## Project Overview
 
 HakNews is an intelligent news digest service that delivers curated summaries of top Hacker News stories and discussions directly to your inbox. The service leverages AI to provide concise, meaningful summaries of both articles and community discussions, helping tech professionals stay informed without information overload.
+
+## Features
+
+- Fetch top stories from Hacker News with comments
+- AI-powered summarization of articles and comments
+- Configurable number of stories and comments
+- Rate limiting and caching for optimal performance
+- Comprehensive error handling
+- Type-safe API with OpenAPI/Swagger documentation
 
 ## HAKATA - HackerNews AI Agent KATA
 
@@ -55,29 +72,29 @@ This project implements the AIA gentic PRD Story Workflow - a systematic approac
 #### Key Components:
 
 - `.ai/` folder: Maintains story history and memory across chat sessions
-- `working-rules.mdc`: Defines collaboration protocols between human and AI
-- Story templates: Standardized format for task breakdown and tracking
+- `.cursorrules`: Defines collaboration protocols between human and AI
+- `.cursor/rules/story-template.mdc`: Standardized format for task breakdown and tracking
+- `.cursor/rules/`: rules for the AI agent in multiple small files targeting file glob patterns
 
 ### Best Practices
 
-_(To be expanded)_
-
 - Work in small, granular tasks
 - Ensure detailed task specifications to reduce ambiguity
-- [More best practices to come]
+- Follow TDD principles
+- Document changes in story files
 
 ## Project Progress
 
 | Phase                   | Status      | Description                                               |
 | ----------------------- | ----------- | --------------------------------------------------------- |
 | ✅ Project Setup        | Complete    | Repository initialization and basic configuration         |
-| 🚧 NestJS Configuration | In Progress | Setting up NestJS framework and initial project structure |
-| ⏳ HN API Integration   | Pending     | Implementing Hacker News API integration                  |
-| ⏳ AWS Infrastructure   | Pending     | Setting up AWS CDK and required services                  |
-| ⏳ Testing Framework    | Pending     | Implementing comprehensive testing strategy               |
-| ⏳ LLM Integration      | Pending     | Adding AI summarization capabilities                      |
-| ⏳ Email Service        | Pending     | Implementing email delivery system                        |
-| ⏳ Production Deploy    | Pending     | Final deployment and production setup                     |
+| ✅ NestJS Configuration | Complete    | Setting up NestJS framework and initial project structure |
+| ✅ HN API Integration   | Complete    | Implementing Hacker News API integration                  |
+| ✅ AWS Infrastructure   | Complete    | Setting up AWS CDK and required services                  |
+| ✅ Testing Framework    | Complete    | Implementing comprehensive testing strategy               |
+| ✅ LLM Integration      | Complete    | Adding AI summarization capabilities                      |
+| 🚧 Email Service        | In Progress | Implementing email delivery system                        |
+| ✅ Production Deploy    | Complete    | Final deployment and production setup                     |
 
 ## Technologies Used
 
@@ -91,10 +108,8 @@ _(To be expanded)_
 ### AWS Services (Free Tier)
 
 - Lambda (Serverless Functions)
-- DynamoDB (Database)
 - API Gateway (REST API Management)
 - CloudWatch (Monitoring)
-- SQS (Queue Processing)
 
 ### Testing & Quality
 
@@ -104,9 +119,60 @@ _(To be expanded)_
 
 ### AI & Utilities
 
-- Deepseek R1 (LLM Integration)
+- DeepSeek Chat (LLM Integration)
 - Nodemailer (Email Service)
 - Zod (Schema Validation)
+
+## API Documentation
+
+### Endpoints
+
+The API has been streamlined to focus on core functionality:
+
+```
+POST /api/v1/hacker-news/summarized-stories
+```
+
+This endpoint fetches and summarizes Hacker News stories and their comments. Parameters:
+
+- `numStories`: Number of top stories to fetch (default: 10)
+- `numCommentsPerStory`: Number of comments to summarize per story (default: 20)
+- `maxSummaryLength`: Maximum length of each summary in characters (default: 300)
+
+### Example Response
+
+```json
+{
+  "stories": [
+    {
+      "id": 123456,
+      "title": "Example Story Title",
+      "url": "https://example.com/story",
+      "score": 100,
+      "by": "user123",
+      "time": 1647123456,
+      "descendants": 50,
+      "articleSummary": {
+        "summary": "Concise summary of the article content...",
+        "summaryGeneratedAt": "2024-03-21T12:34:56Z",
+        "tokenCount": 150
+      },
+      "commentsSummary": {
+        "summary": "Overview of the discussion...",
+        "summaryGeneratedAt": "2024-03-21T12:34:57Z",
+        "tokenCount": 200
+      }
+    }
+  ],
+  "meta": {
+    "fetchedAt": "2024-03-21T12:34:58Z",
+    "processingTimeMs": 2500,
+    "storiesRetrieved": 1,
+    "totalCommentsRetrieved": 5,
+    "totalTokensUsed": 350
+  }
+}
+```
 
 ## Getting Started
 
@@ -117,7 +183,36 @@ _(To be expanded)_
 - AWS Account (for production deployment)
 - Gmail account (for email service)
 
-### Local Development Setup
+### Environment Variables
+
+Copy `.env.example` to `.env.local` for local development or `.env.production` for production:
+
+```bash
+# Required Environment Variables
+NODE_ENV=development|production
+
+# LLM Configuration
+LLM_API_KEY=your-deepseek-api-key
+LLM_API_ENDPOINT=https://api.deepseek.com/v1/chat/completions
+LLM_MODEL=deepseek-chat
+LLM_BASE_URL=https://api.deepseek.com
+LLM_MAX_TOKENS=500
+LLM_TEMPERATURE=0.7
+LLM_RATE_LIMIT_PER_MINUTE=60
+
+# Email Configuration (if using email features)
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USER=your-email@gmail.com
+SMTP_PASS=your-app-specific-password
+TEST_EMAIL_RECIPIENTS=comma,separated,email,list
+
+# Production API Configuration
+API_URL=your-api-gateway-url
+API_KEY=your-api-gateway-key
+```
+
+### Installation
 
 1. Clone the repository
 
@@ -132,36 +227,51 @@ cd haknews
 npm install
 ```
 
-3. Configure environment variables
-
-```bash
-cp .env.example .env.local
-```
-
-Edit `.env.local` with your configuration:
-
-- AWS credentials (if testing AWS services locally)
-- LLM API credentials
-- Gmail SMTP settings
-- Other service configurations
-
-4. Start the development server
+3. Start the development server
 
 ```bash
 npm run start:dev
 ```
 
-### Running Tests
+### Available Commands
+
+#### Development Commands
 
 ```bash
-# Run unit tests
-npm run test
+# Start development server
+npm run start:dev
 
-# Run e2e tests
-npm run test:e2e
+# Run tests
+npm run test                 # Unit tests
+npm run test:e2e            # End-to-end tests
+npm run test:e2e:ui         # E2E tests with UI
+npm run test:e2e:prod       # E2E tests against production
+```
 
-# Generate test coverage report
-npm run test:cov
+#### Story Summarization Commands
+
+```bash
+# Local development
+npm run summarize           # Summarize stories from local server
+
+# Production environment
+npm run summarize:prod              # Default: 10 stories, 20 comments, 300 chars
+npm run summarize:prod:quick        # Quick overview: 3 stories, 5 comments, 200 chars
+npm run summarize:prod:detailed     # Detailed view: 5 stories, 20 comments, 500 chars
+
+# Custom parameters
+npm run summarize:prod -- <numStories> <numCommentsPerStory> <maxSummaryLength>
+Example: npm run summarize:prod -- 5 10 250
+
+# Show help
+npm run summarize:prod -- --help
+```
+
+#### Deployment Commands
+
+```bash
+npm run deploy             # Deploy to AWS
+npm run diff               # Show infrastructure changes
 ```
 
 ## Architecture
@@ -175,14 +285,10 @@ graph TD
     C --> D[HN API Service]
     C --> E[LLM Service]
     C --> F[Email Service]
-    C --> G[(DynamoDB)]
-    H[SQS Queue] --> C
 
     subgraph AWS Cloud
         B
         C
-        G
-        H
     end
 ```
 
@@ -200,12 +306,7 @@ graph TD
    - LLM-powered summarization
    - Email delivery system
 
-3. **Data Storage**
-
-   - DynamoDB for persistence
-   - SQS for job queue management
-
-4. **Infrastructure**
+3. **Infrastructure**
    - AWS CDK for IaC
    - Lambda for serverless compute
    - CloudWatch for monitoring
@@ -263,169 +364,3 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
-
-# HakNews API
-
-A powerful API service that provides access to Hacker News content with AI-powered summarization capabilities.
-
-## Features
-
-- Fetch top stories from Hacker News with comments
-- AI-powered summarization of articles and comments
-- Configurable number of stories and comments
-- Rate limiting and caching for optimal performance
-- Comprehensive error handling
-- Type-safe API with OpenAPI/Swagger documentation
-
-## Getting Started
-
-### Prerequisites
-
-- Node.js 18+
-- npm or yarn
-- Environment variables (see `.env.example`)
-
-### Installation
-
-```bash
-npm install
-```
-
-### Configuration
-
-Create a `.env` file with the following variables:
-
-```env
-PORT=3000
-LLM_API_KEY=your_llm_api_key
-LLM_API_ENDPOINT=your_llm_api_endpoint
-API_KEY=your_api_key  # For production deployment
-API_URL=your_api_url  # For production deployment
-```
-
-### Running the Application
-
-```bash
-# Development
-npm run start:dev
-
-# Production
-npm run start:prod
-```
-
-## API Usage Examples
-
-### Summarize Top Stories
-
-Get AI-generated summaries of top Hacker News stories and their comments:
-
-```bash
-# Using curl
-curl -X POST http://localhost:3000/api/v1/hacker-news/summarized-stories \
-  -H 'Content-Type: application/json' \
-  -d '{
-    "numStories": 3,
-    "numCommentsPerStory": 5,
-    "maxSummaryLength": 200,
-    "includeOriginalContent": false
-  }'
-
-# Using the CLI command (local)
-npm run summarize
-
-# Using the CLI command (production)
-npm run summarize:prod
-```
-
-Example Response:
-
-```json
-{
-  "stories": [
-    {
-      "id": 123456,
-      "title": "Example Story Title",
-      "url": "https://example.com/story",
-      "score": 100,
-      "by": "user123",
-      "time": 1647123456,
-      "descendants": 50,
-      "articleSummary": {
-        "summary": "Concise summary of the article content...",
-        "summaryGeneratedAt": "2024-03-21T12:34:56Z",
-        "tokenCount": 150
-      },
-      "summarizedComments": [
-        {
-          "id": 987654,
-          "text": "Original comment text...",
-          "by": "commenter456",
-          "time": 1647123789,
-          "level": 0,
-          "summarizedContent": {
-            "summary": "Concise summary of the comment...",
-            "summaryGeneratedAt": "2024-03-21T12:34:57Z",
-            "tokenCount": 75
-          }
-        }
-      ]
-    }
-  ],
-  "meta": {
-    "fetchedAt": "2024-03-21T12:34:58Z",
-    "processingTimeMs": 2500,
-    "storiesRetrieved": 3,
-    "totalCommentsRetrieved": 15,
-    "totalTokensUsed": 1250
-  }
-}
-```
-
-### API Documentation
-
-The API documentation is available at `/api` when running the application. It provides:
-
-- Detailed endpoint descriptions
-- Request/response schemas
-- Example payloads
-- Error responses
-- Authentication requirements
-
-## Development
-
-### Running Tests
-
-```bash
-# Unit tests
-npm test
-
-# E2E tests
-npm run test:e2e
-
-# Test coverage
-npm run test:cov
-```
-
-### Code Style
-
-```bash
-# Format code
-npm run format
-
-# Lint code
-npm run lint
-```
-
-## Deployment
-
-```bash
-# Deploy to AWS
-npm run deploy
-
-# Check infrastructure changes
-npm run diff
-```
-
-## License
-
-This project is licensed under the UNLICENSED License - see the LICENSE file for details.

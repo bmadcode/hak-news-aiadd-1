@@ -67,7 +67,8 @@ export class LLMService {
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
   ) {
     this.apiKey = this.configService.getOrThrow<string>('LLM_API_KEY');
-    this.apiEndpoint = this.configService.getOrThrow<string>('LLM_ENDPOINT');
+    this.apiEndpoint =
+      this.configService.getOrThrow<string>('LLM_API_ENDPOINT');
     this.model = this.configService.getOrThrow<string>('LLM_MODEL');
     this.thinkingTag = this.configService.get<string>('LLM_THINKING_TAG', '');
 
