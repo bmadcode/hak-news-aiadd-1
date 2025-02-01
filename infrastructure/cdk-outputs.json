@@ -1,0 +1,7 @@
+{
+  "hak-news": {
+    "ApiUrl": "https://p23e17axci.execute-api.us-east-1.amazonaws.com/prod/",
+    "ApiKeyId": "6sfgsi7d28",
+    "HakNewsApiEndpoint1880A48A": "https://p23e17axci.execute-api.us-east-1.amazonaws.com/prod/"
+  }
+}

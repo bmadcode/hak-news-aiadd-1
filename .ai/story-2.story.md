@@ -215,5 +215,5 @@ interface TopStoriesResponse {
 
 ### Next Steps:
 
-1. - [ ] Create convenience command in package.json
-2. - [ ] Add end-to-end tests for the API endpoint
+1. - ✅ Create convenience command in package.json
+2. - ✅ Add end-to-end tests for the API endpoint
