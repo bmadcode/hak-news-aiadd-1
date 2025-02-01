@@ -45,7 +45,7 @@ export class ArticleScraperService {
       return {
         text: `Unable to fetch content from invalid URL: ${url}`,
         fetchedAt: timestamp,
-        success: true,
+        success: false,
         error: undefined,
       };
     }
@@ -164,7 +164,7 @@ export class ArticleScraperService {
           return {
             text: `Unable to fetch content from ${url}. Error: ${errorMessage}`,
             fetchedAt: timestamp,
-            success: true,
+            success: false,
             error: undefined,
           };
         }

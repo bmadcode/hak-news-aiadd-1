@@ -62,11 +62,6 @@ export class SummarizedContentDto {
   tokenCount: number;
 }
 
-export class SummarizedCommentDto extends CommentDto {
-  @ApiProperty({ type: () => SummarizedContentDto })
-  summarizedContent: SummarizedContentDto;
-}
-
 export class SummarizedStoryDto {
   @ApiProperty()
   id: number;
@@ -93,8 +88,11 @@ export class SummarizedStoryDto {
   @ApiProperty({ type: () => SummarizedContentDto })
   articleSummary: SummarizedContentDto;
 
-  @ApiProperty({ type: [SummarizedCommentDto] })
-  summarizedComments: SummarizedCommentDto[];
+  @ApiProperty({ type: () => SummarizedContentDto })
+  commentsSummary: SummarizedContentDto;
+
+  @ApiProperty({ type: [CommentDto] })
+  comments: CommentDto[];
 }
 
 export class SummarizedStoriesResponseDto {
