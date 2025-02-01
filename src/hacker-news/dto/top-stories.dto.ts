@@ -74,6 +74,17 @@ export class CommentDto {
   parent?: number;
 }
 
+export class CommentSummaryDto {
+  @ApiProperty()
+  summary: string;
+
+  @ApiProperty()
+  summaryGeneratedAt: string;
+
+  @ApiProperty()
+  tokenCount: number;
+}
+
 export class StoryDto {
   @ApiProperty()
   id: number;
@@ -101,8 +112,9 @@ export class StoryDto {
   @IsOptional()
   articleContent?: ArticleContentDto;
 
-  @ApiProperty({ type: [CommentDto] })
-  comments: CommentDto[];
+  @ApiPropertyOptional({ type: () => CommentSummaryDto })
+  @IsOptional()
+  commentSummary?: CommentSummaryDto;
 }
 
 export class TopStoriesResponseDto {

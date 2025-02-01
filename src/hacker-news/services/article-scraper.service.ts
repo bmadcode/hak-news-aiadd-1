@@ -4,6 +4,7 @@ import { firstValueFrom } from 'rxjs';
 import * as cheerio from 'cheerio';
 import { ArticleContentDto } from '../dto/top-stories.dto';
 import { AxiosResponse } from 'axios';
+import { RateLimiter } from 'limiter';
 
 @Injectable()
 export class ArticleScraperService {
@@ -12,26 +13,34 @@ export class ArticleScraperService {
   private activeRequests = 0;
   private readonly maxConcurrentRequests = 10;
   private readonly requestQueue: Array<() => Promise<void>> = [];
+  private readonly limiter = new RateLimiter({
+    tokensPerInterval: 10,
+    interval: 1000,
+  });
 
   constructor(private readonly httpService: HttpService) {}
 
-  private async executeWithRateLimit<T>(task: () => Promise<T>): Promise<T> {
-    if (this.activeRequests >= this.maxConcurrentRequests) {
-      // Instead of throwing, return a fallback value
-      this.logger.warn('Rate limit exceeded, using fallback content');
-      return Promise.resolve({
-        text: 'Rate limit exceeded. Please try again later.',
-        fetchedAt: new Date().toISOString(),
-        success: true,
-        error: undefined,
-      } as T);
-    }
-
-    this.activeRequests++;
+  private async executeWithRateLimit<T extends ArticleContentDto>(
+    fn: () => Promise<T>,
+  ): Promise<T> {
     try {
-      return await task();
-    } finally {
-      this.activeRequests--;
+      const remainingRequests = await this.limiter.tryRemoveTokens(1);
+      if (!remainingRequests) {
+        return {
+          text: '',
+          fetchedAt: new Date().toISOString(),
+          success: false,
+          error: 'Rate limit exceeded. Please try again later.',
+        } as T;
+      }
+      return fn();
+    } catch (error) {
+      return {
+        text: '',
+        fetchedAt: new Date().toISOString(),
+        success: false,
+        error: 'Rate limit exceeded. Please try again later.',
+      } as T;
     }
   }
 
@@ -39,19 +48,20 @@ export class ArticleScraperService {
     const timestamp = new Date().toISOString();
     this.logger.debug(`Starting to scrape article from URL: ${url}`);
 
-    // Validate URL
-    if (!this.urlRegex.test(url)) {
-      this.logger.warn(`Invalid URL format: ${url}`);
-      return {
-        text: `Unable to fetch content from invalid URL: ${url}`,
-        fetchedAt: timestamp,
-        success: false,
-        error: undefined,
-      };
-    }
-
     try {
-      return await this.executeWithRateLimit(async () => {
+      // Validate URL
+      try {
+        new URL(url);
+      } catch {
+        return {
+          text: '',
+          fetchedAt: timestamp,
+          success: false,
+          error: 'Invalid URL provided',
+        };
+      }
+
+      return await this.executeWithRateLimit<ArticleContentDto>(async () => {
         try {
           this.logger.debug(`Making HTTP request to: ${url}`);
           const response: AxiosResponse<string> = await firstValueFrom(
@@ -81,10 +91,10 @@ export class ArticleScraperService {
           if (!contentType.includes('text/html')) {
             this.logger.warn(`Non-HTML content type received: ${contentType}`);
             return {
-              text: `Content from ${url} is not in HTML format. Content type: ${contentType}`,
+              text: '',
               fetchedAt: timestamp,
-              success: true,
-              error: undefined,
+              success: false,
+              error: 'Response is not HTML content',
             };
           }
 
@@ -162,24 +172,21 @@ export class ArticleScraperService {
             error instanceof Error ? error.stack : undefined,
           );
           return {
-            text: `Unable to fetch content from ${url}. Error: ${errorMessage}`,
+            text: '',
             fetchedAt: timestamp,
             success: false,
-            error: undefined,
+            error: `Failed to fetch article: ${errorMessage}`,
           };
         }
       });
     } catch (error) {
-      this.logger.error(
-        `Failed to scrape article ${url}: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        error instanceof Error ? error.stack : undefined,
-      );
-
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error';
       return {
-        text: `Unable to process content from ${url}. The service will continue with available information.`,
-        fetchedAt: timestamp,
-        success: true,
-        error: undefined,
+        text: '',
+        fetchedAt: new Date().toISOString(),
+        success: false,
+        error: errorMessage,
       };
     }
   }

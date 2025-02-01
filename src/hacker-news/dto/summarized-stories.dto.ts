@@ -90,9 +90,6 @@ export class SummarizedStoryDto {
 
   @ApiProperty({ type: () => SummarizedContentDto })
   commentsSummary: SummarizedContentDto;
-
-  @ApiProperty({ type: [CommentDto] })
-  comments: CommentDto[];
 }
 
 export class SummarizedStoriesResponseDto {

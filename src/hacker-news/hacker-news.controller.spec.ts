@@ -118,7 +118,11 @@ describe('HackerNewsController', () => {
       by: 'testuser',
       time: 1643673600,
       descendants: 50,
-      comments: [],
+      commentSummary: {
+        summary: 'Test comment summary',
+        summaryGeneratedAt: new Date().toISOString(),
+        tokenCount: 50,
+      },
     };
 
     const mockComment: HNComment & { level: number } = {
@@ -130,30 +134,27 @@ describe('HackerNewsController', () => {
       level: 0,
     };
 
-    it('should return top stories with comments', async () => {
-      const mockComments = [mockComment];
+    it('should return top stories with comment summaries', async () => {
       const getTopStoriesMock = jest.spyOn(service, 'getTopStories');
       const getStoryCommentsMock = jest.spyOn(service, 'getStoryComments');
 
       getTopStoriesMock.mockResolvedValue([mockStory]);
-      getStoryCommentsMock.mockResolvedValue(mockComments);
+      getStoryCommentsMock.mockResolvedValue({
+        summary: 'Test comment summary',
+        summaryGeneratedAt: new Date().toISOString(),
+        tokenCount: 50,
+      });
 
       const result = await controller.getTopStories(mockRequest);
 
       expect(result).toBeDefined();
       expect(result.stories).toHaveLength(1);
-      expect(result.stories[0]).toEqual({
-        ...mockStory,
-        comments: mockComments,
-      });
+      const story = result.stories[0];
+      expect(story.commentSummary).toBeDefined();
+      expect(story.commentSummary?.summary).toBe('Test comment summary');
       expect(result.meta).toBeDefined();
       expect(result.meta.storiesRetrieved).toBe(1);
-      expect(result.meta.totalCommentsRetrieved).toBe(1);
       expect(getTopStoriesMock).toHaveBeenCalledWith(mockRequest.numStories);
-      expect(getStoryCommentsMock).toHaveBeenCalledWith(
-        mockStory.id,
-        mockRequest.numCommentsPerStory,
-      );
     });
 
     it('should handle invalid request parameters', async () => {
@@ -197,7 +198,11 @@ describe('HackerNewsController', () => {
         .mockResolvedValue([mockStoryWithContent]);
       const getStoryCommentsSpy = jest
         .spyOn(service, 'getStoryComments')
-        .mockResolvedValue([mockComment]);
+        .mockResolvedValue({
+          summary: 'Test comment summary',
+          summaryGeneratedAt: new Date().toISOString(),
+          tokenCount: 50,
+        });
 
       const result = await controller.getTopStories(requestWithContent);
 
@@ -217,7 +222,7 @@ describe('HackerNewsController', () => {
     };
 
     const mockSummaryResponse = {
-      summary: 'Test summary for article',
+      summary: 'Test summary',
       summaryGeneratedAt: new Date().toISOString(),
       tokenCount: 50,
     };
@@ -229,7 +234,7 @@ describe('HackerNewsController', () => {
       const summarizeContentMock = jest.spyOn(service, 'summarizeContent');
 
       getTopStoriesMock.mockResolvedValue(mockStories);
-      getStoryCommentsMock.mockResolvedValue([]);
+      getStoryCommentsMock.mockResolvedValue(mockSummaryResponse);
       summarizeContentMock.mockResolvedValue(mockSummaryResponse);
 
       // Execute
@@ -238,11 +243,92 @@ describe('HackerNewsController', () => {
       // Assert
       expect(result).toBeDefined();
       expect(result.stories).toHaveLength(2);
-      expect(result.stories[0]).toHaveProperty('articleSummary');
-      expect(result.stories[0]).toHaveProperty('summarizedComments');
+
+      const firstStory = result.stories[0];
+      expect(firstStory).toHaveProperty('articleSummary');
+      expect(firstStory).toHaveProperty('commentsSummary');
+
+      // Check article summary
+      expect(firstStory.articleSummary).toEqual(mockSummaryResponse);
+
+      // Check comments summary
+      expect(firstStory.commentsSummary).toEqual(mockSummaryResponse);
+
+      // Check metadata
       expect(result.meta).toHaveProperty('totalTokensUsed');
+      expect(result.meta.totalTokensUsed).toBe(
+        result.stories.reduce(
+          (sum, story) =>
+            sum +
+            story.articleSummary.tokenCount +
+            story.commentsSummary.tokenCount,
+          0,
+        ),
+      );
+
+      // Verify service calls
       expect(getTopStoriesMock).toHaveBeenCalledWith(validRequest.numStories);
-      expect(summarizeContentMock).toHaveBeenCalled();
+      expect(getStoryCommentsMock).toHaveBeenCalledWith(
+        mockStories[0].id,
+        validRequest.numCommentsPerStory,
+      );
+      expect(summarizeContentMock).toHaveBeenCalledTimes(2); // 1 article + 1 comments summary per story
+    });
+
+    it('should handle article retrieval failure gracefully', async () => {
+      // Setup mocks
+      const getTopStoriesMock = jest.spyOn(service, 'getTopStories');
+      const getStoryCommentsMock = jest.spyOn(service, 'getStoryComments');
+      const summarizeContentMock = jest.spyOn(service, 'summarizeContent');
+
+      getTopStoriesMock.mockResolvedValue([mockStories[0]]);
+      getStoryCommentsMock.mockResolvedValue(mockSummaryResponse);
+
+      // Mock article summarization to fail
+      summarizeContentMock.mockImplementation((content) => {
+        if (content === mockStories[0].url) {
+          return Promise.reject(new Error('Failed to fetch article'));
+        }
+        return Promise.resolve(mockSummaryResponse);
+      });
+
+      // Execute
+      const result = await controller.getSummarizedStories(validRequest);
+
+      // Assert
+      const story = result.stories[0];
+      expect(story.articleSummary.summary).toBe(
+        `${mockStories[0].title} from ${mockStories[0].url} unretrievable, try yourself by visiting the link.`,
+      );
+      expect(story.articleSummary.tokenCount).toBe(0);
+
+      // Comments summary should still work
+      expect(story.commentsSummary).toEqual(mockSummaryResponse);
+    });
+
+    it('should handle story without URL', async () => {
+      // Setup mocks
+      const storyWithoutUrl = { ...mockStories[0], url: undefined };
+      const getTopStoriesMock = jest.spyOn(service, 'getTopStories');
+      const getStoryCommentsMock = jest.spyOn(service, 'getStoryComments');
+      const summarizeContentMock = jest.spyOn(service, 'summarizeContent');
+
+      getTopStoriesMock.mockResolvedValue([storyWithoutUrl]);
+      getStoryCommentsMock.mockResolvedValue(mockSummaryResponse);
+      summarizeContentMock.mockResolvedValue(mockSummaryResponse);
+
+      // Execute
+      const result = await controller.getSummarizedStories(validRequest);
+
+      // Assert
+      const story = result.stories[0];
+      expect(story.articleSummary.summary).toBe(
+        `${storyWithoutUrl.title} (no URL provided)`,
+      );
+      expect(story.articleSummary.tokenCount).toBe(0);
+
+      // Comments summary should still work
+      expect(story.commentsSummary).toEqual(mockSummaryResponse);
     });
 
     it('should handle invalid request parameters', async () => {
@@ -259,9 +345,11 @@ describe('HackerNewsController', () => {
     it('should handle LLM service failures gracefully', async () => {
       // Setup mocks
       const getTopStoriesMock = jest.spyOn(service, 'getTopStories');
+      const getStoryCommentsMock = jest.spyOn(service, 'getStoryComments');
       const summarizeContentMock = jest.spyOn(service, 'summarizeContent');
 
       getTopStoriesMock.mockResolvedValue([mockStories[0]]);
+      getStoryCommentsMock.mockRejectedValue(new Error('LLM service error'));
       summarizeContentMock.mockRejectedValue(new Error('LLM service error'));
 
       // Execute and Assert
@@ -273,6 +361,9 @@ describe('HackerNewsController', () => {
           HttpStatus.INTERNAL_SERVER_ERROR,
         ),
       );
+
+      expect(getTopStoriesMock).toHaveBeenCalled();
+      expect(getStoryCommentsMock).toHaveBeenCalled();
     });
   });
 });

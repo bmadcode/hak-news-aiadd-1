@@ -14,14 +14,36 @@ describe('HackerNewsService', () => {
   let httpService: HttpService;
 
   const mockConfigService = {
+    get: jest.fn((key: string, defaultValue?: string) => {
+      switch (key) {
+        case 'LLM_API_KEY':
+          return 'test-api-key';
+        case 'LLM_API_ENDPOINT':
+          return 'https://api.test.com/v1';
+        case 'LLM_THINKING_TAG':
+          return defaultValue || '';
+        case 'LLM_BASE_URL':
+          return defaultValue || '';
+        case 'LLM_MODEL':
+          return 'test-model';
+        case 'LLM_ENDPOINT':
+          return 'https://api.test.com/v1';
+        default:
+          return defaultValue;
+      }
+    }),
     getOrThrow: jest.fn((key: string) => {
       switch (key) {
         case 'LLM_API_KEY':
           return 'test-api-key';
         case 'LLM_API_ENDPOINT':
           return 'https://api.test.com/v1';
+        case 'LLM_MODEL':
+          return 'test-model';
+        case 'LLM_ENDPOINT':
+          return 'https://api.test.com/v1';
         default:
-          return undefined;
+          throw new Error(`Config key ${key} not found`);
       }
     }),
   };
@@ -107,7 +129,7 @@ describe('HackerNewsService', () => {
       kids: [2, 3],
     };
 
-    it('should fetch the specified number of comments for a story', async () => {
+    it('should generate a summary for story comments', async () => {
       const mockStory = {
         id: 123,
         kids: [1, 2, 3],
@@ -120,9 +142,17 @@ describe('HackerNewsService', () => {
         return of(mockAxiosResponse(mockComment));
       });
 
+      jest.spyOn(service['llmService'], 'summarizeContent').mockResolvedValue({
+        summary: 'Test comment summary',
+        summaryGeneratedAt: new Date().toISOString(),
+        tokenCount: 50,
+      });
+
       const result = await service.getStoryComments(123, 2);
       expect(result).toBeDefined();
-      expect(result.length).toBeLessThanOrEqual(2);
+      expect(result.summary).toBe('Test comment summary');
+      expect(result.tokenCount).toBe(50);
+      expect(result.summaryGeneratedAt).toBeDefined();
     });
 
     it('should throw an error if numComments is out of range', async () => {
@@ -140,14 +170,11 @@ describe('HackerNewsService', () => {
     };
 
     it('should summarize text content directly', async () => {
-      jest.spyOn(httpService, 'post').mockImplementation(() =>
-        of(
-          mockAxiosResponse({
-            choices: [{ text: mockSummary.summary }],
-            usage: { total_tokens: mockSummary.tokenCount },
-          }),
-        ),
-      );
+      jest.spyOn(service['llmService'], 'summarizeContent').mockResolvedValue({
+        summary: mockSummary.summary,
+        summaryGeneratedAt: mockSummary.summaryGeneratedAt,
+        tokenCount: mockSummary.tokenCount,
+      });
 
       const result = await service.summarizeContent('Test content', 100, false);
       expect(result.summary).toBe(mockSummary.summary);
@@ -180,14 +207,57 @@ describe('HackerNewsService', () => {
       expect(result.tokenCount).toBe(mockSummary.tokenCount);
     });
 
-    it('should handle errors gracefully', async () => {
+    it('should handle article scraping failures', async () => {
+      jest
+        .spyOn(service['articleScraperService'], 'scrapeArticle')
+        .mockRejectedValue(new Error('Failed to fetch article'));
+
+      await expect(
+        service.summarizeContent('https://test.com', 100, false),
+      ).rejects.toThrow('Failed to fetch article');
+    });
+
+    it('should handle LLM service failures', async () => {
       jest
         .spyOn(service['llmService'], 'summarizeContent')
         .mockRejectedValue(new Error('LLM error'));
 
       await expect(
         service.summarizeContent('Test content', 100, false),
-      ).rejects.toThrow('Failed to summarize content');
+      ).rejects.toThrow('LLM error');
+    });
+
+    it('should handle aggregated comments summarization', async () => {
+      const comments = [
+        { by: 'user1', text: 'Comment 1' },
+        { by: 'user2', text: 'Comment 2' },
+      ];
+      const aggregatedText = comments
+        .map((comment) => `Comment by ${comment.by}: ${comment.text}`)
+        .join('\n\n');
+
+      jest.spyOn(service['llmService'], 'summarizeContent').mockResolvedValue({
+        summary: 'Aggregated comment summary',
+        summaryGeneratedAt: new Date().toISOString(),
+        tokenCount: 20,
+      });
+
+      const result = await service.summarizeContent(aggregatedText, 100, false);
+      expect(result.summary).toBe('Aggregated comment summary');
+      expect(result.tokenCount).toBe(20);
+    });
+
+    it('should include original content when requested', async () => {
+      const originalText = 'Original test content';
+      jest.spyOn(service['llmService'], 'summarizeContent').mockResolvedValue({
+        summary: mockSummary.summary,
+        summaryGeneratedAt: mockSummary.summaryGeneratedAt,
+        tokenCount: mockSummary.tokenCount,
+        originalContent: originalText,
+      });
+
+      const result = await service.summarizeContent(originalText, 100, true);
+      expect(result.originalContent).toBe(originalText);
     });
   });
 });

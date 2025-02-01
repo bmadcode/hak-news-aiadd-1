@@ -47,7 +47,7 @@ interface SummarizedStoriesResponse {
 
 test.describe('Summarized Stories API', () => {
   // Increase test timeout for LLM operations
-  test.setTimeout(120000);
+  test.setTimeout(300000);
 
   const apiPath =
     config.TEST_ENV === 'prod'

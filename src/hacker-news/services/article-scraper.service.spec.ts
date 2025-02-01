@@ -15,6 +15,20 @@ describe('ArticleScraperService', () => {
   let service: ArticleScraperService;
   let httpService: HttpService;
 
+  const createMockAxiosResponse = <T>(
+    data: T,
+    contentType: string,
+  ): AxiosResponse<T> => ({
+    data,
+    status: 200,
+    statusText: 'OK',
+    headers: { 'content-type': contentType },
+    config: {
+      url: 'https://example.com',
+      headers: new AxiosHeaders(),
+    } as InternalAxiosRequestConfig,
+  });
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       imports: [
@@ -85,9 +99,10 @@ describe('ArticleScraperService', () => {
     });
 
     it('should handle network errors gracefully', async () => {
-      jest
-        .spyOn(httpService, 'get')
-        .mockReturnValue(throwError(() => new Error('Network error')));
+      const mockUrl = 'https://example.com/article';
+      jest.spyOn(httpService, 'get').mockImplementation(() => {
+        return throwError(() => new Error('Network error'));
+      });
 
       const result = await service.scrapeArticle(mockUrl);
 
@@ -98,7 +113,9 @@ describe('ArticleScraperService', () => {
     });
 
     it('should handle invalid URLs', async () => {
-      const result = await service.scrapeArticle('not-a-url');
+      const mockUrl = 'not-a-url';
+
+      const result = await service.scrapeArticle(mockUrl);
 
       expect(result.success).toBe(false);
       expect(result.error).toBe('Invalid URL provided');
@@ -107,18 +124,15 @@ describe('ArticleScraperService', () => {
     });
 
     it('should handle non-HTML responses', async () => {
-      const mockResponse: AxiosResponse<unknown> = {
-        data: { some: 'json' },
-        status: 200,
-        statusText: 'OK',
-        headers: createMockHeaders('application/json'),
-        config: {
-          url: mockUrl,
-          headers: new AxiosHeaders(),
-        } as InternalAxiosRequestConfig,
-      };
+      const mockUrl = 'https://example.com/data.json';
+      const mockResponse = createMockAxiosResponse(
+        '{"key": "value"}',
+        'application/json',
+      );
 
-      jest.spyOn(httpService, 'get').mockReturnValue(of(mockResponse));
+      jest.spyOn(httpService, 'get').mockImplementation(() => {
+        return of(mockResponse);
+      });
 
       const result = await service.scrapeArticle(mockUrl);
 
@@ -129,27 +143,34 @@ describe('ArticleScraperService', () => {
     });
 
     it('should respect rate limiting', async () => {
-      const mockResponse: AxiosResponse<string> = {
-        data: mockHtml,
-        status: 200,
-        statusText: 'OK',
-        headers: createMockHeaders('text/html'),
-        config: {
-          url: mockUrl,
-          headers: new AxiosHeaders(),
-        } as InternalAxiosRequestConfig,
-      };
+      const mockUrl = 'https://example.com/article';
+      const mockHtmlResponse = createMockAxiosResponse(
+        '<html><body><p>Test content</p></body></html>',
+        'text/html',
+      );
 
-      jest.spyOn(httpService, 'get').mockReturnValue(of(mockResponse));
+      jest.spyOn(httpService, 'get').mockImplementation(() => {
+        return of(mockHtmlResponse);
+      });
 
-      // Make 11 concurrent requests (more than our limit of 10)
+      // Make 11 concurrent requests
       const promises = Array(11)
         .fill(null)
         .map(() => service.scrapeArticle(mockUrl));
 
       const results = await Promise.all(promises);
-      const successfulRequests = results.filter((r) => r.success).length;
 
+      // Count successful requests and rate limited requests
+      const successfulRequests = results.filter((r) => r.success).length;
+      const rateLimitedRequests = results.filter(
+        (r) => !r.success && r.error?.includes('Rate limit'),
+      ).length;
+
+      // Total should be 11
+      expect(successfulRequests + rateLimitedRequests).toBe(11);
+      // At least one request should be rate limited
+      expect(rateLimitedRequests).toBeGreaterThan(0);
+      // No more than 10 successful requests
       expect(successfulRequests).toBeLessThanOrEqual(10);
     });
   });

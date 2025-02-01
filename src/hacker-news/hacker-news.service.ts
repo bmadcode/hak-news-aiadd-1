@@ -110,7 +110,7 @@ export class HackerNewsService {
   async getStoryComments(
     storyId: number,
     numComments: number,
-  ): Promise<Array<HNComment & { level: number }>> {
+  ): Promise<SummarizedContent> {
     if (numComments < 0 || numComments > 50) {
       throw new Error('Number of comments must be between 0 and 50');
     }
@@ -118,13 +118,11 @@ export class HackerNewsService {
     this.logger.debug(`Fetching ${numComments} comments for story ${storyId}`);
 
     const cacheKey = `story-comments-${storyId}-${numComments}`;
-    const cachedComments =
-      await this.cacheManager.get<Array<HNComment & { level: number }>>(
-        cacheKey,
-      );
-    if (cachedComments) {
-      this.logger.debug('Returning cached comments');
-      return cachedComments;
+    const cachedSummary =
+      await this.cacheManager.get<SummarizedContent>(cacheKey);
+    if (cachedSummary) {
+      this.logger.debug('Returning cached comment summary');
+      return cachedSummary;
     }
 
     try {
@@ -136,7 +134,11 @@ export class HackerNewsService {
 
       if (!story.kids || story.kids.length === 0) {
         this.logger.debug(`No comments found for story ${storyId}`);
-        return [];
+        return {
+          summary: 'No comments available for this story.',
+          summaryGeneratedAt: new Date().toISOString(),
+          tokenCount: 0,
+        };
       }
 
       this.logger.debug(`Story has ${story.kids.length} top-level comments`);
@@ -193,8 +195,20 @@ export class HackerNewsService {
       this.logger.debug(
         `Successfully fetched ${comments.length} comments for story ${storyId}`,
       );
-      await this.cacheManager.set(cacheKey, comments, 15 * 60 * 1000);
-      return comments;
+
+      // Generate summary from comments
+      const commentText = comments
+        .map((comment) => `Comment by ${comment.by}: ${comment.text}`)
+        .join('\n\n');
+
+      const summary = await this.llmService.summarizeContent(
+        commentText,
+        500, // reasonable length for comment summary
+        false,
+      );
+
+      await this.cacheManager.set(cacheKey, summary, 15 * 60 * 1000);
+      return summary;
     } catch (error: unknown) {
       const errorMessage =
         error instanceof Error ? error.message : 'Unknown error';
@@ -226,6 +240,11 @@ export class HackerNewsService {
         this.logger.debug(`Fetching content from URL: ${contentOrUrl}`);
         const articleContent =
           await this.articleScraperService.scrapeArticle(contentOrUrl);
+
+        if (!articleContent.success) {
+          throw new Error(articleContent.error || 'Failed to fetch article');
+        }
+
         content = articleContent.text;
         this.logger.debug(
           `Fetched content length: ${content.length} characters`,
@@ -256,7 +275,7 @@ export class HackerNewsService {
         `Failed to summarize content: ${errorMessage}`,
         error instanceof Error ? error.stack : undefined,
       );
-      throw new Error('Failed to summarize content');
+      throw error instanceof Error ? error : new Error(errorMessage);
     }
   }
 }

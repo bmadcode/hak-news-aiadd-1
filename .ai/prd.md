@@ -39,7 +39,12 @@ Create a service that sends daily summaries of the top **M** stories along with 
   - Make actual network calls to HN API in all test environments
   - since we cannot control the actualy results, these tests will just validate there are no errors and the response is valid with some summarized text
   - deploy and ensure all passes in the production environment
-- Story 7: Email Service
+  - Story 7: There should only be a single summarization route, remove the route to get hacker news stories and comments.
+  - remove top stories e2e
+  - remove the route to get top stories raw hacker news data
+  - remove the command to get top stories
+  - the only be the command to get all summaries of posts, articles, and comments
+- Story 8: Email Service
   - when story 5 includes emails in the post body, send an email to the email address in the post body
   - use nodemailer to send an email - configured in the environment variables
   - use gmail as the email service

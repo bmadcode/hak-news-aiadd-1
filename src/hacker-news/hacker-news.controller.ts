@@ -63,22 +63,19 @@ export class HackerNewsController {
       // Fetch comments for each story
       const storiesWithComments = await Promise.all(
         stories.map(async (story) => {
-          const comments = await this.hackerNewsService.getStoryComments(
+          const commentSummary = await this.hackerNewsService.getStoryComments(
             story.id,
             request.numCommentsPerStory,
           );
           return {
             ...story,
-            comments,
+            commentSummary,
           };
         }),
       );
 
       // Calculate metadata
-      const totalComments = storiesWithComments.reduce(
-        (sum, story) => sum + story.comments.length,
-        0,
-      );
+      const totalComments = storiesWithComments.length; // Now counting stories with summaries
 
       return {
         stories: storiesWithComments,
@@ -178,8 +175,8 @@ Retrieves and summarizes top Hacker News stories and their comments using AI.
       // Process each story with summaries
       const summarizedStories = await Promise.all(
         stories.map(async (story) => {
-          // Get comments
-          const comments = await this.hackerNewsService.getStoryComments(
+          // Get comment summary
+          const commentsSummary = await this.hackerNewsService.getStoryComments(
             story.id,
             request.numCommentsPerStory,
           );
@@ -207,33 +204,10 @@ Retrieves and summarizes top Hacker News stories and their comments using AI.
                 ...(request.includeOriginalContent && { originalContent: '' }),
               };
 
-          // Aggregate all comments into a single text for summarization
-          const aggregatedComments = comments
-            .map((comment) => `Comment by ${comment.by}: ${comment.text}`)
-            .join('\n\n');
-
-          // Generate single summary for all comments
-          const commentsSummary =
-            comments.length > 0
-              ? await this.hackerNewsService.summarizeContent(
-                  aggregatedComments,
-                  request.maxSummaryLength,
-                  request.includeOriginalContent,
-                )
-              : {
-                  summary: 'No comments to summarize',
-                  summaryGeneratedAt: new Date().toISOString(),
-                  tokenCount: 0,
-                  ...(request.includeOriginalContent && {
-                    originalContent: '',
-                  }),
-                };
-
           return {
             ...story,
             articleSummary,
             commentsSummary,
-            comments, // Original comments without individual summaries
           };
         }),
       );
@@ -253,10 +227,7 @@ Retrieves and summarizes top Hacker News stories and their comments using AI.
           fetchedAt: new Date().toISOString(),
           processingTimeMs: Date.now() - startTime,
           storiesRetrieved: summarizedStories.length,
-          totalCommentsRetrieved: summarizedStories.reduce(
-            (sum, story) => sum + story.comments.length,
-            0,
-          ),
+          totalCommentsRetrieved: summarizedStories.length, // Each story has one comment summary
           totalTokensUsed: totalTokens,
         },
       };
