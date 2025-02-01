@@ -263,3 +263,169 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
+
+# HakNews API
+
+A powerful API service that provides access to Hacker News content with AI-powered summarization capabilities.
+
+## Features
+
+- Fetch top stories from Hacker News with comments
+- AI-powered summarization of articles and comments
+- Configurable number of stories and comments
+- Rate limiting and caching for optimal performance
+- Comprehensive error handling
+- Type-safe API with OpenAPI/Swagger documentation
+
+## Getting Started
+
+### Prerequisites
+
+- Node.js 18+
+- npm or yarn
+- Environment variables (see `.env.example`)
+
+### Installation
+
+```bash
+npm install
+```
+
+### Configuration
+
+Create a `.env` file with the following variables:
+
+```env
+PORT=3000
+LLM_API_KEY=your_llm_api_key
+LLM_API_ENDPOINT=your_llm_api_endpoint
+API_KEY=your_api_key  # For production deployment
+API_URL=your_api_url  # For production deployment
+```
+
+### Running the Application
+
+```bash
+# Development
+npm run start:dev
+
+# Production
+npm run start:prod
+```
+
+## API Usage Examples
+
+### Summarize Top Stories
+
+Get AI-generated summaries of top Hacker News stories and their comments:
+
+```bash
+# Using curl
+curl -X POST http://localhost:3000/api/v1/hacker-news/summarized-stories \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "numStories": 3,
+    "numCommentsPerStory": 5,
+    "maxSummaryLength": 200,
+    "includeOriginalContent": false
+  }'
+
+# Using the CLI command (local)
+npm run summarize
+
+# Using the CLI command (production)
+npm run summarize:prod
+```
+
+Example Response:
+
+```json
+{
+  "stories": [
+    {
+      "id": 123456,
+      "title": "Example Story Title",
+      "url": "https://example.com/story",
+      "score": 100,
+      "by": "user123",
+      "time": 1647123456,
+      "descendants": 50,
+      "articleSummary": {
+        "summary": "Concise summary of the article content...",
+        "summaryGeneratedAt": "2024-03-21T12:34:56Z",
+        "tokenCount": 150
+      },
+      "summarizedComments": [
+        {
+          "id": 987654,
+          "text": "Original comment text...",
+          "by": "commenter456",
+          "time": 1647123789,
+          "level": 0,
+          "summarizedContent": {
+            "summary": "Concise summary of the comment...",
+            "summaryGeneratedAt": "2024-03-21T12:34:57Z",
+            "tokenCount": 75
+          }
+        }
+      ]
+    }
+  ],
+  "meta": {
+    "fetchedAt": "2024-03-21T12:34:58Z",
+    "processingTimeMs": 2500,
+    "storiesRetrieved": 3,
+    "totalCommentsRetrieved": 15,
+    "totalTokensUsed": 1250
+  }
+}
+```
+
+### API Documentation
+
+The API documentation is available at `/api` when running the application. It provides:
+
+- Detailed endpoint descriptions
+- Request/response schemas
+- Example payloads
+- Error responses
+- Authentication requirements
+
+## Development
+
+### Running Tests
+
+```bash
+# Unit tests
+npm test
+
+# E2E tests
+npm run test:e2e
+
+# Test coverage
+npm run test:cov
+```
+
+### Code Style
+
+```bash
+# Format code
+npm run format
+
+# Lint code
+npm run lint
+```
+
+## Deployment
+
+```bash
+# Deploy to AWS
+npm run deploy
+
+# Check infrastructure changes
+npm run diff
+```
+
+## License
+
+This project is licensed under the UNLICENSED License - see the LICENSE file for details.

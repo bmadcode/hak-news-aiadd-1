@@ -6,6 +6,7 @@ import { Cache } from 'cache-manager';
 import { Inject } from '@nestjs/common';
 import { firstValueFrom } from 'rxjs';
 import { ArticleScraperService } from './services/article-scraper.service';
+import { LLMService, SummarizedContent } from './services/llm.service';
 
 interface HNStory {
   id: number;
@@ -36,6 +37,7 @@ export class HackerNewsService {
     private readonly httpService: HttpService,
     private readonly configService: ConfigService,
     private readonly articleScraperService: ArticleScraperService,
+    private readonly llmService: LLMService,
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
   ) {}
 
@@ -47,32 +49,43 @@ export class HackerNewsService {
       throw new Error('Number of stories must be between 1 and 30');
     }
 
-    // Try to get from cache first
+    this.logger.debug(
+      `Fetching ${numStories} top stories (includeArticleContent: ${includeArticleContent})`,
+    );
+
     const cacheKey = `top-stories-${numStories}-${includeArticleContent}`;
     const cachedStories = await this.cacheManager.get<HNStory[]>(cacheKey);
     if (cachedStories) {
+      this.logger.debug('Returning cached stories');
       return cachedStories;
     }
 
     try {
-      // Fetch top story IDs
+      this.logger.debug('Fetching top story IDs from Hacker News API');
       const response = await firstValueFrom(
         this.httpService.get<number[]>(`${this.baseUrl}/topstories.json`),
       );
       const storyIds = response.data.slice(0, numStories);
+      this.logger.debug(`Retrieved ${storyIds.length} story IDs`);
 
-      // Fetch story details in parallel
       const stories = await Promise.all(
         storyIds.map(async (id) => {
+          this.logger.debug(`Fetching details for story ${id}`);
           const storyResponse = await firstValueFrom(
             this.httpService.get<HNStory>(`${this.baseUrl}/item/${id}.json`),
           );
           const story = storyResponse.data;
+          this.logger.debug(
+            `Retrieved story: ${story.title} (${story.url || 'no URL'})`,
+          );
 
-          // If requested and URL exists, fetch article content
           if (includeArticleContent && story.url) {
+            this.logger.debug(`Fetching article content for story ${id}`);
             const articleContent =
               await this.articleScraperService.scrapeArticle(story.url);
+            this.logger.debug(
+              `Retrieved ${articleContent.text.length} characters of content`,
+            );
             return { ...story, articleContent };
           }
 
@@ -80,14 +93,16 @@ export class HackerNewsService {
         }),
       );
 
-      // Cache the results
-      await this.cacheManager.set(cacheKey, stories, 5 * 60 * 1000); // 5 minutes TTL
-
+      this.logger.debug(`Successfully fetched ${stories.length} stories`);
+      await this.cacheManager.set(cacheKey, stories, 5 * 60 * 1000);
       return stories;
     } catch (error: unknown) {
       const errorMessage =
         error instanceof Error ? error.message : 'Unknown error';
-      this.logger.error(`Failed to fetch top stories: ${errorMessage}`);
+      this.logger.error(
+        `Failed to fetch top stories: ${errorMessage}`,
+        error instanceof Error ? error.stack : undefined,
+      );
       throw new Error('Failed to fetch top stories');
     }
   }
@@ -100,25 +115,31 @@ export class HackerNewsService {
       throw new Error('Number of comments must be between 0 and 50');
     }
 
+    this.logger.debug(`Fetching ${numComments} comments for story ${storyId}`);
+
     const cacheKey = `story-comments-${storyId}-${numComments}`;
     const cachedComments =
       await this.cacheManager.get<Array<HNComment & { level: number }>>(
         cacheKey,
       );
     if (cachedComments) {
+      this.logger.debug('Returning cached comments');
       return cachedComments;
     }
 
     try {
-      // Fetch the story first to get comment IDs
+      this.logger.debug(`Fetching story ${storyId} details`);
       const storyResponse = await firstValueFrom(
         this.httpService.get<HNStory>(`${this.baseUrl}/item/${storyId}.json`),
       );
       const story = storyResponse.data;
 
       if (!story.kids || story.kids.length === 0) {
+        this.logger.debug(`No comments found for story ${storyId}`);
         return [];
       }
+
+      this.logger.debug(`Story has ${story.kids.length} top-level comments`);
 
       const comments: Array<HNComment & { level: number }> = [];
       const fetchComment = async (
@@ -130,6 +151,7 @@ export class HackerNewsService {
         }
 
         try {
+          this.logger.debug(`Fetching comment ${commentId} at level ${level}`);
           const commentResponse = await firstValueFrom(
             this.httpService.get<HNComment>(
               `${this.baseUrl}/item/${commentId}.json`,
@@ -138,11 +160,16 @@ export class HackerNewsService {
           const comment = commentResponse.data;
 
           if (comment && comment.text) {
+            this.logger.debug(
+              `Retrieved comment ${commentId} with ${comment.text.length} characters`,
+            );
             comments.push({ ...comment, level });
           }
 
-          // Recursively fetch child comments if needed
           if (comment && comment.kids && comments.length < numComments) {
+            this.logger.debug(
+              `Comment ${commentId} has ${comment.kids.length} replies`,
+            );
             for (const kidId of comment.kids) {
               if (comments.length >= numComments) break;
               await fetchComment(kidId, level + 1);
@@ -153,27 +180,83 @@ export class HackerNewsService {
             error instanceof Error ? error.message : 'Unknown error';
           this.logger.warn(
             `Failed to fetch comment ${commentId}: ${errorMessage}`,
+            error instanceof Error ? error.stack : undefined,
           );
         }
       };
 
-      // Start fetching top-level comments
       for (const commentId of story.kids) {
         if (comments.length >= numComments) break;
         await fetchComment(commentId, 0);
       }
 
-      // Cache the results
-      await this.cacheManager.set(cacheKey, comments, 15 * 60 * 1000); // 15 minutes TTL
-
+      this.logger.debug(
+        `Successfully fetched ${comments.length} comments for story ${storyId}`,
+      );
+      await this.cacheManager.set(cacheKey, comments, 15 * 60 * 1000);
       return comments;
     } catch (error: unknown) {
       const errorMessage =
         error instanceof Error ? error.message : 'Unknown error';
       this.logger.error(
         `Failed to fetch comments for story ${storyId}: ${errorMessage}`,
+        error instanceof Error ? error.stack : undefined,
       );
       throw new Error(`Failed to fetch comments for story ${storyId}`);
+    }
+  }
+
+  async summarizeContent(
+    contentOrUrl: string,
+    maxLength: number,
+    includeOriginal = false,
+  ): Promise<SummarizedContent> {
+    try {
+      this.logger.debug(
+        `Attempting to summarize content${contentOrUrl.startsWith('http') ? ' from URL' : ''}: ${
+          contentOrUrl.length > 100
+            ? contentOrUrl.substring(0, 100) + '...'
+            : contentOrUrl
+        }`,
+      );
+
+      // If it's a URL, fetch the content first
+      let content = contentOrUrl;
+      if (contentOrUrl.startsWith('http')) {
+        this.logger.debug(`Fetching content from URL: ${contentOrUrl}`);
+        const articleContent =
+          await this.articleScraperService.scrapeArticle(contentOrUrl);
+        content = articleContent.text;
+        this.logger.debug(
+          `Fetched content length: ${content.length} characters`,
+        );
+        this.logger.debug(`Content preview: ${content.substring(0, 100)}...`);
+      }
+
+      this.logger.debug(
+        `Sending content to LLM service for summarization (length: ${content.length})`,
+      );
+      const summary = await this.llmService.summarizeContent(
+        content,
+        maxLength,
+        includeOriginal,
+      );
+      this.logger.debug(
+        `Successfully generated summary (length: ${summary.summary.length})`,
+      );
+      this.logger.debug(
+        `Summary preview: ${summary.summary.substring(0, 100)}...`,
+      );
+
+      return summary;
+    } catch (error: unknown) {
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error';
+      this.logger.error(
+        `Failed to summarize content: ${errorMessage}`,
+        error instanceof Error ? error.stack : undefined,
+      );
+      throw new Error('Failed to summarize content');
     }
   }
 }

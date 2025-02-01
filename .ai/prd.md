@@ -64,7 +64,7 @@ Create a service that sends daily summaries of the top **M** stories along with 
   - **Node.js 22**
   - **TypeScript**
   - **AWS SDK V3**: AWS SDK for JavaScript v3
-  - **NestJS**: Framework for building server-side applications
+  - **NestJS**: v10 Framework for building server-side applications
 - **Testing:**
   - **Jest** (Unit Testing)
   - **Playwright** (e2e Testing)

@@ -5,12 +5,14 @@ import { HttpModule } from '@nestjs/axios';
 import { CacheModule } from '@nestjs/cache-manager';
 import { ConfigModule } from '@nestjs/config';
 import {
-  TopStoriesRequestDto,
-  TopStoriesResponseDto,
   StoryDto,
   ArticleContentDto,
+  TopStoriesRequestDto,
 } from './dto/top-stories.dto';
 import { ArticleScraperService } from './services/article-scraper.service';
+import { SummarizedStoriesRequestDto } from './dto/summarized-stories.dto';
+import { HttpException, HttpStatus } from '@nestjs/common';
+import { LLMService } from './services/llm.service';
 
 interface HNComment {
   id: number;
@@ -25,6 +27,27 @@ describe('HackerNewsController', () => {
   let controller: HackerNewsController;
   let service: HackerNewsService;
 
+  const mockStories = [
+    {
+      id: 1,
+      title: 'Test Story 1',
+      url: 'http://test1.com',
+      score: 100,
+      by: 'user1',
+      time: 1234567890,
+      descendants: 5,
+    },
+    {
+      id: 2,
+      title: 'Test Story 2',
+      url: 'http://test2.com',
+      score: 200,
+      by: 'user2',
+      time: 1234567891,
+      descendants: 10,
+    },
+  ];
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       imports: [
@@ -32,10 +55,44 @@ describe('HackerNewsController', () => {
         CacheModule.register(),
         ConfigModule.forRoot({
           isGlobal: true,
+          load: [
+            () => ({
+              LLM_API_KEY: 'test-key',
+              LLM_API_ENDPOINT: 'https://test.api/v1',
+            }),
+          ],
         }),
       ],
       controllers: [HackerNewsController],
-      providers: [HackerNewsService, ArticleScraperService],
+      providers: [
+        {
+          provide: HackerNewsService,
+          useValue: {
+            getTopStories: jest.fn(() => Promise.resolve([])),
+            getStoryComments: jest.fn(() => Promise.resolve([])),
+            summarizeContent: jest.fn(() =>
+              Promise.resolve({
+                summary: 'Test summary',
+                summaryGeneratedAt: new Date().toISOString(),
+                tokenCount: 50,
+              }),
+            ),
+          },
+        },
+        {
+          provide: LLMService,
+          useValue: {
+            summarizeContent: jest.fn(() =>
+              Promise.resolve({
+                summary: 'Test summary',
+                summaryGeneratedAt: new Date().toISOString(),
+                tokenCount: 50,
+              }),
+            ),
+          },
+        },
+        ArticleScraperService,
+      ],
     }).compile();
 
     controller = module.get<HackerNewsController>(HackerNewsController);
@@ -75,13 +132,11 @@ describe('HackerNewsController', () => {
 
     it('should return top stories with comments', async () => {
       const mockComments = [mockComment];
+      const getTopStoriesMock = jest.spyOn(service, 'getTopStories');
+      const getStoryCommentsMock = jest.spyOn(service, 'getStoryComments');
 
-      const getTopStoriesSpy = jest
-        .spyOn(service, 'getTopStories')
-        .mockResolvedValue([{ ...mockStory }]);
-      const getStoryCommentsSpy = jest
-        .spyOn(service, 'getStoryComments')
-        .mockResolvedValue(mockComments);
+      getTopStoriesMock.mockResolvedValue([mockStory]);
+      getStoryCommentsMock.mockResolvedValue(mockComments);
 
       const result = await controller.getTopStories(mockRequest);
 
@@ -94,8 +149,8 @@ describe('HackerNewsController', () => {
       expect(result.meta).toBeDefined();
       expect(result.meta.storiesRetrieved).toBe(1);
       expect(result.meta.totalCommentsRetrieved).toBe(1);
-      expect(getTopStoriesSpy).toHaveBeenCalledWith(mockRequest.numStories);
-      expect(getStoryCommentsSpy).toHaveBeenCalledWith(
+      expect(getTopStoriesMock).toHaveBeenCalledWith(mockRequest.numStories);
+      expect(getStoryCommentsMock).toHaveBeenCalledWith(
         mockStory.id,
         mockRequest.numCommentsPerStory,
       );
@@ -150,6 +205,74 @@ describe('HackerNewsController', () => {
       expect(result.stories[0].articleContent?.text).toBe('Article content');
       expect(getTopStoriesSpy).toHaveBeenCalled();
       expect(getStoryCommentsSpy).toHaveBeenCalled();
+    });
+  });
+
+  describe('getSummarizedStories', () => {
+    const validRequest: SummarizedStoriesRequestDto = {
+      numStories: 2,
+      numCommentsPerStory: 2,
+      maxSummaryLength: 200,
+      includeOriginalContent: false,
+    };
+
+    const mockSummaryResponse = {
+      summary: 'Test summary for article',
+      summaryGeneratedAt: new Date().toISOString(),
+      tokenCount: 50,
+    };
+
+    it('should return summarized stories with comments', async () => {
+      // Setup mocks
+      const getTopStoriesMock = jest.spyOn(service, 'getTopStories');
+      const getStoryCommentsMock = jest.spyOn(service, 'getStoryComments');
+      const summarizeContentMock = jest.spyOn(service, 'summarizeContent');
+
+      getTopStoriesMock.mockResolvedValue(mockStories);
+      getStoryCommentsMock.mockResolvedValue([]);
+      summarizeContentMock.mockResolvedValue(mockSummaryResponse);
+
+      // Execute
+      const result = await controller.getSummarizedStories(validRequest);
+
+      // Assert
+      expect(result).toBeDefined();
+      expect(result.stories).toHaveLength(2);
+      expect(result.stories[0]).toHaveProperty('articleSummary');
+      expect(result.stories[0]).toHaveProperty('summarizedComments');
+      expect(result.meta).toHaveProperty('totalTokensUsed');
+      expect(getTopStoriesMock).toHaveBeenCalledWith(validRequest.numStories);
+      expect(summarizeContentMock).toHaveBeenCalled();
+    });
+
+    it('should handle invalid request parameters', async () => {
+      const invalidRequest: SummarizedStoriesRequestDto = {
+        ...validRequest,
+        numStories: 0, // Invalid value
+      };
+
+      await expect(
+        controller.getSummarizedStories(invalidRequest),
+      ).rejects.toThrow(HttpException);
+    });
+
+    it('should handle LLM service failures gracefully', async () => {
+      // Setup mocks
+      const getTopStoriesMock = jest.spyOn(service, 'getTopStories');
+      const summarizeContentMock = jest.spyOn(service, 'summarizeContent');
+
+      getTopStoriesMock.mockResolvedValue([mockStories[0]]);
+      summarizeContentMock.mockRejectedValue(new Error('LLM service error'));
+
+      // Execute and Assert
+      await expect(
+        controller.getSummarizedStories(validRequest),
+      ).rejects.toThrow(
+        new HttpException(
+          'Failed to generate content summaries',
+          HttpStatus.INTERNAL_SERVER_ERROR,
+        ),
+      );
     });
   });
 });

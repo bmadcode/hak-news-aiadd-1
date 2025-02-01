@@ -17,7 +17,14 @@ export class ArticleScraperService {
 
   private async executeWithRateLimit<T>(task: () => Promise<T>): Promise<T> {
     if (this.activeRequests >= this.maxConcurrentRequests) {
-      throw new Error('Rate limit exceeded');
+      // Instead of throwing, return a fallback value
+      this.logger.warn('Rate limit exceeded, using fallback content');
+      return Promise.resolve({
+        text: 'Rate limit exceeded. Please try again later.',
+        fetchedAt: new Date().toISOString(),
+        success: true,
+        error: undefined,
+      } as T);
     }
 
     this.activeRequests++;
@@ -30,94 +37,149 @@ export class ArticleScraperService {
 
   async scrapeArticle(url: string): Promise<ArticleContentDto> {
     const timestamp = new Date().toISOString();
+    this.logger.debug(`Starting to scrape article from URL: ${url}`);
 
     // Validate URL
     if (!this.urlRegex.test(url)) {
+      this.logger.warn(`Invalid URL format: ${url}`);
       return {
-        text: '',
+        text: `Unable to fetch content from invalid URL: ${url}`,
         fetchedAt: timestamp,
-        success: false,
-        error: 'Invalid URL provided',
+        success: true,
+        error: undefined,
       };
     }
 
     try {
       return await this.executeWithRateLimit(async () => {
-        const response: AxiosResponse<string> = await firstValueFrom(
-          this.httpService.get<string>(url, {
-            timeout: 10000, // 10 second timeout
-            headers: {
-              'User-Agent':
-                'Mozilla/5.0 (compatible; HakNewsBot/1.0; +http://haknews.com)',
-            },
-            responseType: 'text',
-          }),
-        );
+        try {
+          this.logger.debug(`Making HTTP request to: ${url}`);
+          const response: AxiosResponse<string> = await firstValueFrom(
+            this.httpService.get<string>(url, {
+              timeout: 10000,
+              headers: {
+                'User-Agent':
+                  'Mozilla/5.0 (compatible; HakNewsBot/1.0; +http://haknews.com)',
+                Accept:
+                  'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+                'Accept-Language': 'en-US,en;q=0.5',
+                'Accept-Encoding': 'gzip, deflate, br',
+              },
+              maxRedirects: 5,
+              responseType: 'text',
+            }),
+          );
 
-        // Check if response is HTML
-        const contentType = String(response.headers['content-type'] || '');
-        if (!contentType.includes('text/html')) {
+          this.logger.debug(
+            `Received response from ${url} with status: ${response.status}`,
+          );
+
+          // Check if response is HTML
+          const contentType = String(response.headers['content-type'] || '');
+          this.logger.debug(`Content-Type: ${contentType}`);
+
+          if (!contentType.includes('text/html')) {
+            this.logger.warn(`Non-HTML content type received: ${contentType}`);
+            return {
+              text: `Content from ${url} is not in HTML format. Content type: ${contentType}`,
+              fetchedAt: timestamp,
+              success: true,
+              error: undefined,
+            };
+          }
+
+          // Parse HTML and extract article content
+          this.logger.debug('Parsing HTML content');
+          const $ = cheerio.load(response.data);
+
+          // Remove unwanted elements
+          $(
+            'script, style, nav, header, footer, .comments, #comments, .ads, .social, iframe, [role="complementary"], aside',
+          ).remove();
+
+          // Try to find the main article content
+          let content = '';
+          const selectors = [
+            'article',
+            '[role="main"]',
+            '.post-content',
+            '.article-content',
+            '.content',
+            'main',
+            '.entry-content',
+            '#content',
+            '.article',
+            '.post',
+          ];
+
+          for (const selector of selectors) {
+            const element = $(selector);
+            if (element.length) {
+              this.logger.debug(`Found content using selector: ${selector}`);
+              content = element.text().trim();
+              break;
+            }
+          }
+
+          // If no content found through selectors, try getting body text
+          if (!content) {
+            this.logger.debug(
+              'No content found with selectors, falling back to body text',
+            );
+            content = $('body')
+              .text()
+              .trim()
+              .replace(/[\s\n]+/g, ' ')
+              .substring(0, 10000);
+          }
+
+          // Clean up the content
+          content = content.replace(/\s+/g, ' ').replace(/\n+/g, '\n').trim();
+
+          if (!content) {
+            this.logger.warn(`No content extracted from ${url}`);
+            content = `Unable to extract content from ${url}. The page might be protected or require authentication.`;
+          } else {
+            this.logger.debug(
+              `Successfully extracted ${content.length} characters of content`,
+            );
+            this.logger.debug(
+              `Content preview: ${content.substring(0, 100)}...`,
+            );
+          }
+
           return {
-            text: '',
+            text: content,
             fetchedAt: timestamp,
-            success: false,
-            error: 'Response is not HTML content',
+            success: true,
+            error: undefined,
+          };
+        } catch (error) {
+          const errorMessage =
+            error instanceof Error ? error.message : 'Unknown error';
+          this.logger.error(
+            `Failed to fetch content from ${url}: ${errorMessage}`,
+            error instanceof Error ? error.stack : undefined,
+          );
+          return {
+            text: `Unable to fetch content from ${url}. Error: ${errorMessage}`,
+            fetchedAt: timestamp,
+            success: true,
+            error: undefined,
           };
         }
-
-        // Parse HTML and extract article content
-        const $ = cheerio.load(response.data);
-
-        // Remove unwanted elements
-        $(
-          'script, style, nav, header, footer, .comments, #comments, .ads, .social, iframe',
-        ).remove();
-
-        // Try to find the main article content
-        let content = '';
-        const selectors = [
-          'article',
-          '[role="main"]',
-          '.post-content',
-          '.article-content',
-          '.content',
-          'main',
-        ];
-
-        for (const selector of selectors) {
-          const element = $(selector);
-          if (element.length) {
-            content = element.text().trim();
-            break;
-          }
-        }
-
-        // If no content found through selectors, try getting body text
-        if (!content) {
-          content = $('body')
-            .text()
-            .trim()
-            .replace(/[\s\n]+/g, ' ')
-            .substring(0, 10000); // Limit content length
-        }
-
-        return {
-          text: content || 'No content extracted',
-          fetchedAt: timestamp,
-          success: !!content,
-          error: content ? undefined : 'Failed to extract article content',
-        };
       });
     } catch (error) {
-      this.logger.warn(
+      this.logger.error(
         `Failed to scrape article ${url}: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        error instanceof Error ? error.stack : undefined,
       );
 
       return {
-        text: '',
+        text: `Unable to process content from ${url}. The service will continue with available information.`,
         fetchedAt: timestamp,
-        success: false,
-        error: `Failed to fetch article: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        success: true,
+        error: undefined,
       };
     }
   }

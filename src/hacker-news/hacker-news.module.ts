@@ -5,6 +5,7 @@ import { ConfigModule } from '@nestjs/config';
 import { HackerNewsService } from './hacker-news.service';
 import { HackerNewsController } from './hacker-news.controller';
 import { ArticleScraperService } from './services/article-scraper.service';
+import { LLMService } from './services/llm.service';
 
 @Module({
   imports: [
@@ -16,7 +17,7 @@ import { ArticleScraperService } from './services/article-scraper.service';
     ConfigModule,
   ],
   controllers: [HackerNewsController],
-  providers: [HackerNewsService, ArticleScraperService],
+  providers: [HackerNewsService, ArticleScraperService, LLMService],
   exports: [HackerNewsService],
 })
 export class HackerNewsModule {}
