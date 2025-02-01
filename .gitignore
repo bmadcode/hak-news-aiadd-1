@@ -1,7 +1,7 @@
 # compiled output
 /dist
 /node_modules
-
+/playwright-report
 # Logs
 logs
 *.log

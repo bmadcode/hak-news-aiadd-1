@@ -26,6 +26,7 @@ Create a service that sends daily summaries of the top **M** stories along with 
 - Story 5: POST API Route to Get N Summarized Post/Article/Comments results
   - Create a new API Route that returns N Summarized Post/Article/Comments results
   - Route post body specifies the number of posts, articles, and comments to return
+  - Ensure <LLM_THINKING_TAG> tags are removed from the response if/when the LLM_THINKING_TAG is set and the response includes the <LLM_THINKING_TAG> tags
   - The summarization will be a paragraph to summarize the linked article if retrievable, and a paragraph to collectively summarize the comments.
   - The summarization LLM route, api key, model will be set in the environment variables
   - Route uses service code from Story 2 (HN Retrieval) to get the raw data from HN API and then uses the LLM to summarize the data

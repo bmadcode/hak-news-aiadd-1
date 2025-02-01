@@ -1,11 +1,5 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { INestApplication, ValidationPipe } from '@nestjs/common';
-import * as request from 'supertest';
-import { AppModule } from '../src/app.module';
-import {
-  SummarizedStoriesRequestDto,
-  SummarizedStoriesResponseDto,
-} from '../src/hacker-news/dto/summarized-stories.dto';
+import { test, expect } from '@playwright/test';
+import { config } from './config/test.config';
 
 interface ErrorResponse {
   message: string | string[];
@@ -13,150 +7,196 @@ interface ErrorResponse {
   statusCode?: number;
 }
 
-describe('HackerNews Summarized Stories (e2e)', () => {
-  let app: INestApplication;
-
-  beforeEach(async () => {
-    const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [AppModule],
-    }).compile();
-
-    app = moduleFixture.createNestApplication();
-    app.useGlobalPipes(new ValidationPipe());
-    await app.init();
-  });
-
-  afterEach(async () => {
-    await app.close();
-  });
-
-  describe('POST /api/v1/hacker-news/summarized-stories', () => {
-    const validRequest: SummarizedStoriesRequestDto = {
-      numStories: 2,
-      numCommentsPerStory: 2,
-      maxSummaryLength: 200,
-      includeOriginalContent: false,
+interface SummarizedStory {
+  id: number;
+  title: string;
+  url: string;
+  articleSummary: {
+    summary: string;
+    summaryGeneratedAt: string;
+    tokenCount: number;
+    originalContent?: string;
+  };
+  summarizedComments: {
+    id: number;
+    text: string;
+    by: string;
+    summarizedContent: {
+      summary: string;
+      summaryGeneratedAt: string;
+      tokenCount: number;
+      originalContent?: string;
     };
+  }[];
+  meta: {
+    fetchedAt: string;
+    processingTimeMs: number;
+    storiesRetrieved: number;
+    totalCommentsRetrieved: number;
+    totalTokensUsed: number;
+  };
+}
 
-    it('should return summarized stories with comments', async () => {
-      const response = await request(app.getHttpServer())
-        .post('/api/v1/hacker-news/summarized-stories')
-        .send(validRequest)
-        .expect(201);
+interface SummarizedStoriesResponse {
+  stories: SummarizedStory[];
+}
 
-      const responseBody =
-        response.body as unknown as SummarizedStoriesResponseDto;
+test.describe('Summarized Stories API', () => {
+  // Increase test timeout for LLM operations
+  test.setTimeout(120000);
 
-      expect(responseBody).toBeDefined();
-      expect(responseBody.stories).toBeDefined();
-      expect(Array.isArray(responseBody.stories)).toBe(true);
-      expect(responseBody.stories.length).toBeLessThanOrEqual(
-        validRequest.numStories,
-      );
+  const apiPath =
+    config.TEST_ENV === 'prod'
+      ? '/prod/api/v1/hacker-news/summarized-stories'
+      : '/api/v1/hacker-news/summarized-stories';
 
-      // Verify story structure
-      const story = responseBody.stories[0];
-      expect(story).toHaveProperty('id');
-      expect(story).toHaveProperty('title');
-      expect(story).toHaveProperty('articleSummary');
-      expect(story.articleSummary).toHaveProperty('summary');
-      expect(story.articleSummary).toHaveProperty('summaryGeneratedAt');
-      expect(story.articleSummary).toHaveProperty('tokenCount');
-
-      // Verify comments structure
-      expect(story.summarizedComments).toBeDefined();
-      expect(Array.isArray(story.summarizedComments)).toBe(true);
-      expect(story.summarizedComments.length).toBeLessThanOrEqual(
-        validRequest.numCommentsPerStory,
-      );
-
-      if (story.summarizedComments.length > 0) {
-        const comment = story.summarizedComments[0];
-        expect(comment).toHaveProperty('id');
-        expect(comment).toHaveProperty('text');
-        expect(comment).toHaveProperty('by');
-        expect(comment).toHaveProperty('summarizedContent');
-        expect(comment.summarizedContent).toHaveProperty('summary');
-        expect(comment.summarizedContent).toHaveProperty('summaryGeneratedAt');
-        expect(comment.summarizedContent).toHaveProperty('tokenCount');
-      }
-
-      // Verify metadata
-      expect(responseBody.meta).toBeDefined();
-      expect(responseBody.meta).toHaveProperty('fetchedAt');
-      expect(responseBody.meta).toHaveProperty('processingTimeMs');
-      expect(responseBody.meta).toHaveProperty('storiesRetrieved');
-      expect(responseBody.meta).toHaveProperty('totalCommentsRetrieved');
-      expect(responseBody.meta).toHaveProperty('totalTokensUsed');
+  test('should return summarized stories successfully', async ({ request }) => {
+    const response = await request.post(apiPath, {
+      data: {
+        numStories: 3,
+        numCommentsPerStory: 5,
+        maxSummaryLength: 200,
+        includeOriginalContent: false,
+      },
+      headers: {
+        'x-api-key': config.API_KEY,
+      },
     });
 
-    it('should handle invalid request parameters', async () => {
-      const invalidRequest = {
-        ...validRequest,
-        numStories: 0, // Invalid value
-      };
+    expect(response.ok()).toBeTruthy();
+    const data = (await response.json()) as SummarizedStoriesResponse;
 
-      const response = await request(app.getHttpServer())
-        .post('/api/v1/hacker-news/summarized-stories')
-        .send(invalidRequest)
-        .expect(400);
+    // Validate response structure
+    expect(data).toHaveProperty('stories');
+    expect(Array.isArray(data.stories)).toBeTruthy();
+    expect(data.stories.length).toBeLessThanOrEqual(3);
 
-      const errorResponse = response.body as unknown as ErrorResponse;
-      expect(errorResponse.message).toContain('between 1 and 10');
-    });
+    // Validate story structure and summaries
+    const firstStory = data.stories[0];
+    expect(firstStory).toHaveProperty('id');
+    expect(firstStory).toHaveProperty('title');
+    expect(firstStory).toHaveProperty('url');
+    expect(firstStory).toHaveProperty('articleSummary');
+    expect(firstStory.articleSummary).toHaveProperty('summary');
+    expect(firstStory.articleSummary).toHaveProperty('summaryGeneratedAt');
+    expect(firstStory.articleSummary).toHaveProperty('tokenCount');
 
-    it('should handle missing required parameters', async () => {
-      const incompleteRequest = {
+    // Verify no LLM thinking tags in summaries
+    expect(firstStory.articleSummary.summary).not.toContain(
+      '<LLM_THINKING_TAG>',
+    );
+
+    // Validate summarized comments
+    expect(firstStory).toHaveProperty('summarizedComments');
+    expect(Array.isArray(firstStory.summarizedComments)).toBeTruthy();
+    expect(firstStory.summarizedComments.length).toBeLessThanOrEqual(5);
+
+    if (firstStory.summarizedComments.length > 0) {
+      const firstComment = firstStory.summarizedComments[0];
+      expect(firstComment).toHaveProperty('id');
+      expect(firstComment).toHaveProperty('text');
+      expect(firstComment).toHaveProperty('by');
+      expect(firstComment).toHaveProperty('summarizedContent');
+      expect(firstComment.summarizedContent.summary).not.toContain(
+        '<LLM_THINKING_TAG>',
+      );
+    }
+
+    // Validate metadata
+    expect(firstStory).toHaveProperty('meta');
+    expect(firstStory.meta).toHaveProperty('fetchedAt');
+    expect(firstStory.meta).toHaveProperty('processingTimeMs');
+    expect(firstStory.meta).toHaveProperty('storiesRetrieved');
+    expect(firstStory.meta).toHaveProperty('totalCommentsRetrieved');
+    expect(firstStory.meta).toHaveProperty('totalTokensUsed');
+  });
+
+  test('should include original content when requested', async ({
+    request,
+  }) => {
+    const response = await request.post(apiPath, {
+      data: {
         numStories: 1,
-        // Missing other required parameters
-      };
-
-      const response = await request(app.getHttpServer())
-        .post('/api/v1/hacker-news/summarized-stories')
-        .send(incompleteRequest)
-        .expect(400);
-
-      const errorResponse = response.body as unknown as ErrorResponse;
-      expect(Array.isArray(errorResponse.message)).toBe(true);
-    });
-
-    it('should respect rate limiting', async () => {
-      // Make multiple requests in quick succession
-      const requests = Array(5).fill(validRequest);
-      const responses = await Promise.all(
-        requests.map(() =>
-          request(app.getHttpServer())
-            .post('/api/v1/hacker-news/summarized-stories')
-            .send(validRequest),
-        ),
-      );
-
-      // At least one request should be rate limited
-      const rateLimitedResponses = responses.filter((r) => r.status === 429);
-      expect(rateLimitedResponses.length).toBeGreaterThan(0);
-    });
-
-    it('should include original content when requested', async () => {
-      const requestWithOriginal = {
-        ...validRequest,
+        numCommentsPerStory: 2,
+        maxSummaryLength: 300,
         includeOriginalContent: true,
-      };
-
-      const response = await request(app.getHttpServer())
-        .post('/api/v1/hacker-news/summarized-stories')
-        .send(requestWithOriginal)
-        .expect(201);
-
-      const responseBody =
-        response.body as unknown as SummarizedStoriesResponseDto;
-      const story = responseBody.stories[0];
-      expect(story.articleSummary).toHaveProperty('originalContent');
-
-      if (story.summarizedComments.length > 0) {
-        expect(story.summarizedComments[0].summarizedContent).toHaveProperty(
-          'originalContent',
-        );
-      }
+      },
+      headers: {
+        'x-api-key': config.API_KEY,
+      },
     });
+
+    expect(response.ok()).toBeTruthy();
+    const data = (await response.json()) as SummarizedStoriesResponse;
+    const firstStory = data.stories[0];
+
+    expect(firstStory.articleSummary).toHaveProperty('originalContent');
+    if (firstStory.summarizedComments.length > 0) {
+      expect(firstStory.summarizedComments[0].summarizedContent).toHaveProperty(
+        'originalContent',
+      );
+    }
+  });
+
+  test('should handle invalid input gracefully', async ({ request }) => {
+    const response = await request.post(apiPath, {
+      data: {
+        numStories: -1,
+        numCommentsPerStory: 'invalid',
+      },
+      headers: {
+        'x-api-key': config.API_KEY,
+      },
+    });
+
+    expect(response.status()).toBe(400);
+    const error = (await response.json()) as ErrorResponse;
+    expect(error).toHaveProperty('message');
+    expect(Array.isArray(error.message)).toBe(true);
+    expect(error.message).toContain('numStories must not be less than 1');
+    expect(error.message).toContain(
+      'numCommentsPerStory must be an integer number',
+    );
+  });
+
+  test('should enforce rate limiting', async ({ request }) => {
+    const makeRequest = () =>
+      request.post(apiPath, {
+        data: {
+          numStories: 1,
+          numCommentsPerStory: 1,
+          maxSummaryLength: 200,
+        },
+        headers: {
+          'x-api-key': config.API_KEY,
+        },
+      });
+
+    // Make multiple requests in quick succession
+    const responses = await Promise.all([
+      makeRequest(),
+      makeRequest(),
+      makeRequest(),
+      makeRequest(),
+      makeRequest(),
+    ]);
+
+    // At least one request should be rate limited
+    const rateLimited = responses.some((response) => response.status() === 429);
+    expect(rateLimited).toBeTruthy();
+  });
+
+  test('should handle missing API key', async ({ request }) => {
+    const response = await request.post(apiPath, {
+      data: {
+        numStories: 1,
+        numCommentsPerStory: 1,
+      },
+    });
+
+    expect(response.status()).toBe(401);
+    const error = (await response.json()) as ErrorResponse;
+    expect(error).toHaveProperty('message');
+    expect(error.message).toContain('API key');
   });
 });

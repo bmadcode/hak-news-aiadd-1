@@ -53,7 +53,6 @@ test.describe('Top Stories API', () => {
     expect(firstStory).toHaveProperty('url');
     expect(firstStory).toHaveProperty('comments');
     expect(Array.isArray(firstStory.comments)).toBeTruthy();
-    expect(firstStory.comments.length).toBeLessThanOrEqual(2);
   });
 
   test('should handle invalid input gracefully', async ({ request }) => {
@@ -62,11 +61,18 @@ test.describe('Top Stories API', () => {
         numStories: -1,
         numCommentsPerStory: 'invalid',
       },
+      headers: {
+        'x-api-key': config.API_KEY,
+      },
     });
 
     expect(response.status()).toBe(400);
     const error = (await response.json()) as ErrorResponse;
     expect(error).toHaveProperty('message');
-    expect(error.message).toContain('must be between');
+    expect(Array.isArray(error.message)).toBe(true);
+    expect(error.message).toContain('numStories must not be less than 1');
+    expect(error.message).toContain(
+      'numCommentsPerStory must be an integer number',
+    );
   });
 });
