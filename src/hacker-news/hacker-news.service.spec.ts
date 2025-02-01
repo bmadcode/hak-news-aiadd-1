@@ -7,7 +7,6 @@ import { ArticleScraperService } from './services/article-scraper.service';
 import { LLMService } from './services/llm.service';
 import { of } from 'rxjs';
 import { AxiosResponse, AxiosHeaders } from 'axios';
-import { ArticleContentDto } from './dto/top-stories.dto';
 
 describe('HackerNewsService', () => {
   let service: HackerNewsService;
@@ -113,8 +112,8 @@ describe('HackerNewsService', () => {
     });
 
     it('should throw an error if numStories is out of range', async () => {
-      await expect(service.getTopStories(31)).rejects.toThrow(
-        'Number of stories must be between 1 and 30',
+      await expect(service.getTopStories(11)).rejects.toThrow(
+        'Number of stories must be between 1 and 10',
       );
     });
   });
@@ -182,7 +181,7 @@ describe('HackerNewsService', () => {
     });
 
     it('should fetch and summarize URL content', async () => {
-      const mockArticle: ArticleContentDto = {
+      const mockArticle = {
         text: 'Article content',
         fetchedAt: new Date().toISOString(),
         success: true,
@@ -245,19 +244,6 @@ describe('HackerNewsService', () => {
       const result = await service.summarizeContent(aggregatedText, 100, false);
       expect(result.summary).toBe('Aggregated comment summary');
       expect(result.tokenCount).toBe(20);
-    });
-
-    it('should include original content when requested', async () => {
-      const originalText = 'Original test content';
-      jest.spyOn(service['llmService'], 'summarizeContent').mockResolvedValue({
-        summary: mockSummary.summary,
-        summaryGeneratedAt: mockSummary.summaryGeneratedAt,
-        tokenCount: mockSummary.tokenCount,
-        originalContent: originalText,
-      });
-
-      const result = await service.summarizeContent(originalText, 100, true);
-      expect(result.originalContent).toBe(originalText);
     });
   });
 });

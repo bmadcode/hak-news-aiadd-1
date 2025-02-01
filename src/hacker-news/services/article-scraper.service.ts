@@ -2,9 +2,15 @@ import { Injectable, Logger } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { firstValueFrom } from 'rxjs';
 import * as cheerio from 'cheerio';
-import { ArticleContentDto } from '../dto/top-stories.dto';
 import { AxiosResponse } from 'axios';
 import { RateLimiter } from 'limiter';
+
+export interface ArticleContent {
+  text: string;
+  fetchedAt: string;
+  success: boolean;
+  error?: string;
+}
 
 @Injectable()
 export class ArticleScraperService {
@@ -20,7 +26,7 @@ export class ArticleScraperService {
 
   constructor(private readonly httpService: HttpService) {}
 
-  private async executeWithRateLimit<T extends ArticleContentDto>(
+  private async executeWithRateLimit<T extends ArticleContent>(
     fn: () => Promise<T>,
   ): Promise<T> {
     try {
@@ -44,7 +50,7 @@ export class ArticleScraperService {
     }
   }
 
-  async scrapeArticle(url: string): Promise<ArticleContentDto> {
+  async scrapeArticle(url: string): Promise<ArticleContent> {
     const timestamp = new Date().toISOString();
     this.logger.debug(`Starting to scrape article from URL: ${url}`);
 
@@ -61,7 +67,7 @@ export class ArticleScraperService {
         };
       }
 
-      return await this.executeWithRateLimit<ArticleContentDto>(async () => {
+      return await this.executeWithRateLimit<ArticleContent>(async () => {
         try {
           this.logger.debug(`Making HTTP request to: ${url}`);
           const response: AxiosResponse<string> = await firstValueFrom(

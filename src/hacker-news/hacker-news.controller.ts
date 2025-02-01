@@ -9,10 +9,6 @@ import {
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { HackerNewsService } from './hacker-news.service';
 import {
-  TopStoriesRequestDto,
-  TopStoriesResponseDto,
-} from './dto/top-stories.dto';
-import {
   SummarizedStoriesRequestDto,
   SummarizedStoriesResponseDto,
 } from './dto/summarized-stories.dto';
@@ -23,86 +19,6 @@ export class HackerNewsController {
   private readonly logger = new Logger(HackerNewsController.name);
 
   constructor(private readonly hackerNewsService: HackerNewsService) {}
-
-  @Post('top-stories')
-  @ApiOperation({ summary: 'Get top Hacker News stories with comments' })
-  @ApiResponse({
-    status: 200,
-    description: 'Successfully retrieved stories and comments',
-    type: TopStoriesResponseDto,
-  })
-  @ApiResponse({ status: 400, description: 'Invalid request parameters' })
-  @ApiResponse({ status: 429, description: 'Rate limit exceeded' })
-  @ApiResponse({ status: 500, description: 'Internal server error' })
-  @ApiResponse({ status: 504, description: 'Gateway timeout' })
-  async getTopStories(
-    @Body() request: TopStoriesRequestDto,
-  ): Promise<TopStoriesResponseDto> {
-    const startTime = Date.now();
-
-    try {
-      // Validate request parameters
-      if (request.numStories < 1 || request.numStories > 30) {
-        throw new HttpException(
-          'Number of stories must be between 1 and 30',
-          HttpStatus.BAD_REQUEST,
-        );
-      }
-      if (request.numCommentsPerStory < 0 || request.numCommentsPerStory > 50) {
-        throw new HttpException(
-          'Number of comments must be between 0 and 50',
-          HttpStatus.BAD_REQUEST,
-        );
-      }
-
-      // Fetch top stories
-      const stories = await this.hackerNewsService.getTopStories(
-        request.numStories,
-      );
-
-      // Fetch comments for each story
-      const storiesWithComments = await Promise.all(
-        stories.map(async (story) => {
-          const commentSummary = await this.hackerNewsService.getStoryComments(
-            story.id,
-            request.numCommentsPerStory,
-          );
-          return {
-            ...story,
-            commentSummary,
-          };
-        }),
-      );
-
-      // Calculate metadata
-      const totalComments = storiesWithComments.length; // Now counting stories with summaries
-
-      return {
-        stories: storiesWithComments,
-        meta: {
-          fetchedAt: new Date().toISOString(),
-          processingTimeMs: Date.now() - startTime,
-          storiesRetrieved: storiesWithComments.length,
-          totalCommentsRetrieved: totalComments,
-        },
-      };
-    } catch (error) {
-      this.logger.error(
-        `Failed to fetch top stories: ${
-          error instanceof Error ? error.message : 'Unknown error'
-        }`,
-      );
-
-      if (error instanceof HttpException) {
-        throw error;
-      }
-
-      throw new HttpException(
-        'Failed to fetch stories',
-        HttpStatus.INTERNAL_SERVER_ERROR,
-      );
-    }
-  }
 
   @Post('summarized-stories')
   @ApiOperation({

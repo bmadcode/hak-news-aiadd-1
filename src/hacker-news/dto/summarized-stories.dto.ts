@@ -1,7 +1,6 @@
 import { IsInt, Min, Max, IsBoolean, IsOptional } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { CommentDto } from './top-stories.dto';
 
 export class SummarizedStoriesRequestDto {
   @ApiProperty({

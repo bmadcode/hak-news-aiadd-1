@@ -41,19 +41,14 @@ export class HackerNewsService {
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
   ) {}
 
-  async getTopStories(
-    numStories: number,
-    includeArticleContent = false,
-  ): Promise<HNStory[]> {
-    if (numStories < 1 || numStories > 30) {
-      throw new Error('Number of stories must be between 1 and 30');
+  async getTopStories(numStories: number): Promise<HNStory[]> {
+    if (numStories < 1 || numStories > 10) {
+      throw new Error('Number of stories must be between 1 and 10');
     }
 
-    this.logger.debug(
-      `Fetching ${numStories} top stories (includeArticleContent: ${includeArticleContent})`,
-    );
+    this.logger.debug(`Fetching ${numStories} top stories`);
 
-    const cacheKey = `top-stories-${numStories}-${includeArticleContent}`;
+    const cacheKey = `top-stories-${numStories}`;
     const cachedStories = await this.cacheManager.get<HNStory[]>(cacheKey);
     if (cachedStories) {
       this.logger.debug('Returning cached stories');
@@ -78,17 +73,6 @@ export class HackerNewsService {
           this.logger.debug(
             `Retrieved story: ${story.title} (${story.url || 'no URL'})`,
           );
-
-          if (includeArticleContent && story.url) {
-            this.logger.debug(`Fetching article content for story ${id}`);
-            const articleContent =
-              await this.articleScraperService.scrapeArticle(story.url);
-            this.logger.debug(
-              `Retrieved ${articleContent.text.length} characters of content`,
-            );
-            return { ...story, articleContent };
-          }
-
           return story;
         }),
       );

@@ -161,9 +161,11 @@ describe('ArticleScraperService', () => {
       const results = await Promise.all(promises);
 
       // Count successful requests and rate limited requests
-      const successfulRequests = results.filter((r) => r.success).length;
+      const successfulRequests = results.filter(
+        (result) => result.success,
+      ).length;
       const rateLimitedRequests = results.filter(
-        (r) => !r.success && r.error?.includes('Rate limit'),
+        (result) => !result.success && result.error?.includes('Rate limit'),
       ).length;
 
       // Total should be 11

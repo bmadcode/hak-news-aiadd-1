@@ -8,11 +8,13 @@
 
 ## Status
 
-Draft
+Closed - Will Not Do
 
 ## Context
 
 With the completion of Story 5's summarized content API route, we need to ensure its reliability through comprehensive end-to-end testing. These tests will verify the entire flow from HTTP request to response, including interactions with the HN API and LLM service. Since we cannot control the actual content from Hacker News, our tests will focus on validating the structure and presence of summarized content rather than specific content values.
+
+Note: This story has been closed as we are proceeding directly to Story 7 to consolidate our API routes.
 
 ## Estimation
 
