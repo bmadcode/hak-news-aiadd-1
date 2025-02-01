@@ -51,9 +51,18 @@ Story Points: 3
    3. - [x] Create environment switching mechanism
 
 4. - [ ] Test Infrastructure
-   1. - [ ] Set up test reporting
-   2. - [ ] Configure CI/CD pipeline integration
-   3. - [ ] Create test documentation
+   1. - [x] Set up test reporting
+      1. - [x] Configure HTML test reporter for Playwright
+      2. - [x] Add test report generation to CI pipeline
+      3. - [x] Set up report artifact storage
+   2. - [x] Configure CI/CD pipeline integration
+      1. - [x] Create GitHub Actions workflow for E2E tests
+      2. - [x] Configure test matrix for local and production environments
+      3. - [x] Set up proper environment variable handling in CI
+   3. - [x] Create test documentation
+      1. - [x] Document test setup and configuration
+      2. - [x] Document test execution procedures
+      3. - [x] Add troubleshooting guide
 
 ## Constraints
 
@@ -87,3 +96,24 @@ Story Points: 3
   - `test:e2e:pw:ui`: Run tests in UI mode against local environment
   - `test:e2e:pw:prod`: Run tests against production environment
 - Next: Set up test reporting and CI/CD pipeline integration
+
+2024-03-20:
+
+- Breaking down Test Infrastructure tasks into detailed subtasks
+- Next steps:
+  1. Implement HTML test reporter configuration
+  2. Set up GitHub Actions workflow
+  3. Create comprehensive test documentation
+
+2024-03-20 (Update 2):
+
+- Completed all Test Infrastructure tasks:
+  1. Configured HTML and list reporters in playwright.config.ts
+  2. Created GitHub Actions workflow for automated testing
+  3. Added comprehensive test documentation in e2e/README.md
+- Story 4 is now complete and ready for review
+
+Next Steps:
+
+1. Review and merge the changes
+2. Begin Story 5: POST API Route for Summarized Content

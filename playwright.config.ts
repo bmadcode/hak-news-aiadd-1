@@ -7,7 +7,7 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
   workers: process.env.CI ? 1 : undefined,
-  reporter: 'html',
+  reporter: [['html'], ['list']],
   use: {
     baseURL: config.API_URL,
     trace: 'on-first-retry',
@@ -15,11 +15,15 @@ export default defineConfig({
       'x-api-key': config.API_KEY,
     },
   },
-
   projects: [
     {
-      name: 'api-tests',
+      name: 'api-testing',
       testMatch: /.*\.e2e\.ts/,
     },
   ],
+  outputDir: 'test-results/',
+  timeout: 30000,
+  expect: {
+    timeout: 10000,
+  },
 });
