@@ -44,10 +44,41 @@ Create a service that sends daily summaries of the top **M** stories along with 
   - remove the route to get top stories raw hacker news data
   - remove the command to get top stories
   - the only be the command to get all summaries of posts, articles, and comments
-- Story 8: Email Service
-  - when story 5 includes emails in the post body, send an email to the email address in the post body
-  - use nodemailer to send an email - configured in the environment variables
-  - use gmail as the email service
+- Story 8: Email Summaries as a News Letter
+
+  - The Summaries API Route will send an email to the email address in the post body emails: [email1, email2, email3...]
+  - The Email Body will be the rendered html of the email body
+  - The format of the HTML will be the following template:
+
+    This is the Daily Hacker News Top Summary from BMad for Date (MM/DD/YYYY)
+
+          Story 1 // Bold Centered
+          The Title as a URL // the URL test will be the title, the link will be the url
+          Story 1 Summary: Summary of the story
+
+          Story 1 Comment Summary: Summary of the comments
+
+          ***
+
+          Story 2 // Bold Centered
+          The Title as a URL // the URL test will be the title, the link will be the url
+          Story 2 Summary: Summary of the story
+
+          Story 2 Comment Summary: Summary of the comments
+
+          ***
+
+          ...etc for each story
+
+          ***
+
+          Thank you for subscribing to the BMad Hacker News Summary
+
+          You can unsubscribe at any time by clicking the link below
+
+          [Unsubscribe](https://www.youtube.com/watch?v=dQw4w9WgXcQ)
+
+  - use nodemailer to send the emails
 
 ## Testing Strategy
 
