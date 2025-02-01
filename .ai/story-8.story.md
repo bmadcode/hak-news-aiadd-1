@@ -8,7 +8,7 @@
 
 ## Status
 
-Draft
+In Progress
 
 ## Context
 
@@ -20,42 +20,42 @@ Story Points: 3
 
 ## Acceptance Criteria
 
-1. - [ ] API endpoint accepts an array of email addresses in the request body
-2. - [ ] Email HTML template matches the specified format in PRD
-3. - [ ] Emails are sent successfully using Nodemailer
-4. - [ ] Email includes proper date formatting (MM/DD/YYYY)
-5. - [ ] All links in email are properly formatted and clickable
+1. - [x] API endpoint accepts an array of email addresses in the request body
+2. - [x] Email HTML template matches the specified format in PRD
+3. - [x] Emails are sent successfully using Nodemailer
+4. - [x] Email includes proper date formatting (MM/DD/YYYY)
+5. - [x] All links in email are properly formatted and clickable
 6. - [ ] Unsubscribe link is included in every email
-7. - [ ] Error handling for failed email sends is implemented
+7. - [x] Error handling for failed email sends is implemented
 8. - [ ] Email sending is tested in both local and production environments
 
 ## Subtasks
 
-1. - [ ] Email Template Implementation
+1. - [x] Email Template Implementation
 
-   1. - [ ] Create HTML email template following PRD specifications
-   2. - [ ] Implement date formatting utility
+   1. - [x] Create HTML email template following PRD specifications
+   2. - [x] Implement date formatting utility
    3. - [ ] Add unsubscribe link to template
-   4. - [ ] Create test template with sample data
+   4. - [x] Create test template with sample data
 
-2. - [ ] Nodemailer Integration
+2. - [x] Nodemailer Integration
 
-   1. - [ ] Add nodemailer dependencies
-   2. - [ ] Create email service class
-   3. - [ ] Configure Gmail SMTP settings
-   4. - [ ] Implement email sending functionality
-   5. - [ ] Add error handling for failed sends
+   1. - [x] Add nodemailer dependencies
+   2. - [x] Create email service class
+   3. - [x] Configure Gmail SMTP settings
+   4. - [x] Implement email sending functionality
+   5. - [x] Add error handling for failed sends
 
-3. - [ ] API Enhancement
+3. - [x] API Enhancement
 
-   1. - [ ] Modify existing summarization endpoint to accept email addresses
-   2. - [ ] Add email validation using Zod
-   3. - [ ] Integrate email sending with summarization flow
-   4. - [ ] Add appropriate error responses
+   1. - [x] Modify existing summarization endpoint to accept email addresses
+   2. - [x] Add email validation using Zod
+   3. - [x] Integrate email sending with summarization flow
+   4. - [x] Add appropriate error responses
 
 4. - [ ] Testing
-   1. - [ ] Write unit tests for email service
-   2. - [ ] Write integration tests for API with email functionality
+   1. - [x] Write unit tests for email service
+   2. - [x] Write integration tests for API with email functionality
    3. - [ ] Add e2e tests using Playwright
    4. - [ ] Test email sending in production environment
 
@@ -71,4 +71,17 @@ Story Points: 3
 - Gmail SMTP credentials will need to be added to environment variables (loaded from env local and or prod)
 - Need to ensure HTML is properly escaped in email template
 
-## Progress Notes As Needed
+## Progress Notes
+
+1. Email service implementation complete with proper error handling
+2. Template service created with EJS for HTML email generation
+3. Unit tests added for both email and template services
+4. Added new dev commands for better process management:
+   - `npm run dev` - Start development server
+   - `npm run dev:restart` - Kill port 3000 and restart server
+
+Remaining Tasks:
+
+1. Implement unsubscribe functionality
+2. Complete e2e tests
+3. Test in production environment

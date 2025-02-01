@@ -230,7 +230,8 @@ npm install
 3. Start the development server
 
 ```bash
-npm run start:dev
+npm run dev              # Start development server
+npm run dev:restart      # Kill port 3000 and restart server
 ```
 
 ### Available Commands
@@ -239,7 +240,8 @@ npm run start:dev
 
 ```bash
 # Start development server
-npm run start:dev
+npm run dev              # Start development server
+npm run dev:restart      # Kill port 3000 and restart server
 
 # Run tests
 npm run test                 # Unit tests
