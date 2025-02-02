@@ -156,10 +156,14 @@ export class HackerNewsService {
             this.logger.debug(
               `Comment ${commentId} has ${comment.kids.length} replies`,
             );
-            for (const kidId of comment.kids) {
-              if (comments.length >= numComments) break;
-              await fetchComment(kidId, level + 1);
-            }
+            // Process child comments in parallel
+            await Promise.all(
+              comment.kids.map(async (kidId) => {
+                if (comments.length < numComments) {
+                  await fetchComment(kidId, level + 1);
+                }
+              }),
+            );
           }
         } catch (error: unknown) {
           const errorMessage =
@@ -171,10 +175,14 @@ export class HackerNewsService {
         }
       };
 
-      for (const commentId of story.kids) {
-        if (comments.length >= numComments) break;
-        await fetchComment(commentId, 0);
-      }
+      // Process top-level comments in parallel
+      await Promise.all(
+        story.kids.map(async (commentId) => {
+          if (comments.length < numComments) {
+            await fetchComment(commentId, 0);
+          }
+        }),
+      );
 
       this.logger.debug(
         `Successfully fetched ${comments.length} comments for story ${storyId}`,

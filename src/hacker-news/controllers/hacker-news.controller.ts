@@ -81,24 +81,26 @@ Retrieves and summarizes top Hacker News stories and their comments using AI.
       // Process each story with summaries
       const summarizedStories = await Promise.all(
         stories.map(async (story) => {
-          // Get comment summary
-          const commentsSummary = await this.hackerNewsService.getStoryComments(
-            story.id,
-            request.numCommentsPerStory,
-          );
-
-          // Generate article summary using URL if available, otherwise use title
-          const articleSummary = story.url
-            ? await this.hackerNewsService.summarizeContent(
-                story.url,
-                request.maxSummaryLength,
-                request.includeOriginalContent,
-              )
-            : {
-                summary: 'No URL available for this story.',
-                summaryGeneratedAt: new Date().toISOString(),
-                tokenCount: 0,
-              };
+          // Parallelize comment and article summarization
+          const [commentsSummary, articleSummary] = await Promise.all([
+            // Get comment summary
+            this.hackerNewsService.getStoryComments(
+              story.id,
+              request.numCommentsPerStory,
+            ),
+            // Generate article summary if URL available
+            story.url
+              ? this.hackerNewsService.summarizeContent(
+                  story.url,
+                  request.maxSummaryLength,
+                  request.includeOriginalContent,
+                )
+              : Promise.resolve({
+                  summary: 'No URL available for this story.',
+                  summaryGeneratedAt: new Date().toISOString(),
+                  tokenCount: 0,
+                }),
+          ]);
 
           return {
             ...story,
