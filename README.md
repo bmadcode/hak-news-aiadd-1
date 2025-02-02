@@ -1,11 +1,25 @@
 # Hakata34 - Code Kata for Agentic Driven Development: AI-Powered Hacker News Digest Service
 
-[![Project Status: 75% Feature Complete](https://img.shields.io/badge/Project%20Status-Active-green.svg)](https://github.com/bmadcode/hakata34)
+[![Project Status: 100% Feature Complete](https://img.shields.io/badge/Project%20Status-Active-green.svg)](https://github.com/bmadcode/hakata34) Current Version 1.0 Feature Complete and frozen.
+
+This repository remains a valuable reference for the AIADD (Ai Agentic Driven Development - AKA BMad Workflow) and serves as a foundation for the optimized V2.0 implementation. For it to function, ensure you have the cursor option on to use .cursorrules file in the root of the project, or add the bulk of it to your cursor settings.
+
+You can view a .ai folder that has the prd. that drove the AI to produce each story in that folder and implement them each 1 at a time. Each numbered story is only created in that folder by the AI after the previous we agree is complete. This magic happens due to the .cursorrules file in the root of the project. The current best model in cursor for this is Claude 3.5 Sonnet. Others are still to wonky to reliable create and modify the story md files against the proper template, and also just generally do not follow our agreed upon working model.
+
+TL;DR:
+
+If you would like to try this out, clone the repo and delete everything aside from, jump in to Composer Agent mode, and have fun:
+
+- .ai/prd.md
+- .cursorrules
+- .cursor/rules/story-template.mdc
+- .cursor/rules/\*.mdc (recommended)
 
 ## Table of Contents
 
 - [Hakata34 - Code Kata for Agentic Driven Development: AI-Powered Hacker News Digest Service](#hakata34---code-kata-for-agentic-driven-development-ai-powered-hacker-news-digest-service)
   - [Table of Contents](#table-of-contents)
+  - [⚠️ Important Project Update](#️-important-project-update)
   - [Project Overview](#project-overview)
   - [Features](#features)
   - [HAKATA - HackerNews AI Agent KATA](#hakata---hackernews-ai-agent-kata)
@@ -38,6 +52,19 @@
     - [Code Style](#code-style)
     - [Documentation](#documentation)
   - [License](#license)
+
+## ⚠️ Important Project Update
+
+**Project Status**: This repository has been frozen at Story 9, and Story 10 will not be implemented. Based on our learnings about the async architecture and optimal route structure, we are initiating a Version 2.0 of the project that will achieve the same end-state more efficiently.
+
+The new project will leverage our enhanced understanding of:
+
+- Asynchronous processing requirements of LLM and story retrieval and 30 second timeout of api gateway
+- Optimal API route design
+- DynamoDB caching strategies
+- Background processing patterns
+
+🔗 **V2.0 Project Link**: [Coming Soon]
 
 ## Project Overview
 
