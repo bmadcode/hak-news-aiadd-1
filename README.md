@@ -15,18 +15,63 @@ If you would like to try this out, clone the repo and delete everything aside fr
 - .cursor/rules/story-template.mdc
 - .cursor/rules/\*.mdc (recommended)
 
+### The AI Agentic Driven Development (AiADD) Workflow
+
+This project implements the AIADD (PRD Story) Workflow - a systematic approach to software development using AI:
+
+1. **Detailed PRD Creation**: Comprehensive documentation of requirements, architecture, and technical decisions, AC, and tasks
+2. **Story-Based Development**: Breaking down the project into manageable stories
+3. **AI-Driven Implementation**: Step-by-step development with AI assistance
+4. **Human-AI Collaboration**: Driver (human) approval and guidance throughout the process
+
+### AIADD Workflow Best Practices
+
+- The PRD and its task breakdown is key to success with this method and workflow.
+- You can always append new high level stories to the PRD.
+- Modify the Tech Stack, Deployment Infra and tooling etc as needed in the PRD along with project constraints for it to take into account when it creates a story file on its own.
+- Due to the rules in the .cursorrules file, the AI when in agent mode will know to figure out:
+  - What is the first or next story to plan
+  - Create a draft plan of the story calling it something like story-1.story.md
+  - Will wait for your review of the file before starting to implement that stories subtasks
+  - Will sometimes work in a TDD fashion, but sometimes will need reminding.
+- Once the story is created, you can tell the AI to begin implementing it.
+- If the AI does not, have it occasionally update the story file with progress by asking it to.
+- After working for a while through subtasks completion, or full story completion, once the story has been updated by the AI, it is best to start a new chat (especially fresh when about to start a new story)
+
+Here is how I like to work with it / sample prompts:
+New Chat Window: Mr Data, please set course for our new mission!
+
+- Data will recognize if the current story is still in progress, create a new story from the next prd task, or suggest otherwise - in agent mode with claud, it should work very fluidly and not need a lot of instruction to know what to do next.
+
+New or Existing Chat Window: Red Alert Data! Ships Computer shows an Anomaly - Engage all Tests!
+
+- Agent will run all unit tests, and will continue to fix failures until all test pass (generally) - this is fun in YOLO mode - go away come back and all might be green. But pay attention to what the AI did to 'make it green' or you might have a bigger mess on your hands unnoticed until later.
+
+New Chat Window: Data - Lets get to work!
+
+- Agent (Mr Data) will know if you are in the middle of a story, or if the story is complete and you are ready to start a new one.
+
+Good luck - the idea with the KATA of doing this is to see how far you can get with the AI as the driver and you as the Project Manager, Coach, Commander of the Starship Enterprise and a Senior Technical Advisor / Lead..
+
+#### Key Components:
+
+- `.ai/` folder: Maintains story history and memory across chat sessions
+- `.cursorrules`: Defines collaboration protocols between human and AI
+- `.cursor/rules/story-template.mdc`: Standardized format for task breakdown and tracking
+- `.cursor/rules/`: rules for the AI agent in multiple small files targeting file glob patterns
+
 ## Table of Contents
 
 - [Hakata34 - Code Kata for Agentic Driven Development: AI-Powered Hacker News Digest Service](#hakata34---code-kata-for-agentic-driven-development-ai-powered-hacker-news-digest-service)
+  - [The AI Agentic Driven Development (AiADD) Workflow](#the-ai-agentic-driven-development-aiadd-workflow)
+  - [AIADD Workflow Best Practices](#aiadd-workflow-best-practices)
+    - [Key Components:](#key-components)
   - [Table of Contents](#table-of-contents)
   - [⚠️ Important Project Update](#️-important-project-update)
   - [Project Overview](#project-overview)
   - [Features](#features)
   - [HAKATA - HackerNews AI Agent KATA](#hakata---hackernews-ai-agent-kata)
     - [What is a Kata?](#what-is-a-kata)
-    - [The AI Agentic PRD Story Workflow](#the-ai-agentic-prd-story-workflow)
-      - [Key Components:](#key-components)
-    - [Best Practices](#best-practices)
   - [Project Progress](#project-progress)
   - [Technologies Used](#technologies-used)
     - [Core Technologies](#core-technologies)
@@ -86,29 +131,6 @@ This repository serves as an exercise in the Agentic AI IDE Workflow Kata (HAKAT
 ### What is a Kata?
 
 The term "kata" (型 or 形) originates from Japanese martial arts, referring to detailed choreographed patterns of movements practiced either solo or in pairs. In software development, a kata is a coding exercise that developers practice repeatedly to hone their skills, improve muscle memory, and master specific techniques or patterns.
-
-### The AI Agentic PRD Story Workflow
-
-This project implements the AIA gentic PRD Story Workflow - a systematic approach to software development using AI agents:
-
-1. **Detailed PRD Creation**: Comprehensive documentation of requirements, architecture, and technical decisions, AC, and tasks
-2. **Story-Based Development**: Breaking down the project into manageable stories
-3. **AI-Driven Implementation**: Step-by-step development with AI assistance
-4. **Human-AI Collaboration**: Driver (human) approval and guidance throughout the process
-
-#### Key Components:
-
-- `.ai/` folder: Maintains story history and memory across chat sessions
-- `.cursorrules`: Defines collaboration protocols between human and AI
-- `.cursor/rules/story-template.mdc`: Standardized format for task breakdown and tracking
-- `.cursor/rules/`: rules for the AI agent in multiple small files targeting file glob patterns
-
-### Best Practices
-
-- Work in small, granular tasks
-- Ensure detailed task specifications to reduce ambiguity
-- Follow TDD principles
-- Document changes in story files
 
 ## Project Progress
 
