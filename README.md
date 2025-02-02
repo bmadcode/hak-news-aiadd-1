@@ -1,4 +1,4 @@
-# Hakata34 - Code Kata for Agentic Driven Development: AI-Powered Hacker News Digest Service
+# HakNews AIADD V1 - Code Kata for Agentic Driven Development: AI-Powered Hacker News Digest Service
 
 [![Project Status: 100% Feature Complete](https://img.shields.io/badge/Project%20Status-Active-green.svg)](https://github.com/bmadcode/hakata34) Current Version 1.0 Feature Complete and frozen.
 
@@ -123,6 +123,8 @@ HakNews is an intelligent news digest service that delivers curated summaries of
 - Rate limiting and caching for optimal performance
 - Comprehensive error handling
 - Type-safe API with OpenAPI/Swagger documentation
+- Send Nice HTML Formatted email summaries
+- AWS Cloud Infra with CDK IaC
 
 ## HAKATA - HackerNews AI Agent KATA
 
