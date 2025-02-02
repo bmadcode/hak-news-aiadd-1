@@ -232,6 +232,7 @@ export class LLMService {
               Authorization: `Bearer ${this.apiKey}`,
               'Content-Type': 'application/json',
             },
+            timeout: 15000,
           }),
         );
 

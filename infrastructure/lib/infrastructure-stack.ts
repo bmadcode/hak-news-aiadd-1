@@ -108,7 +108,7 @@ export class InfrastructureStack extends cdk.Stack {
       handler: 'lambda.handler',
       code: lambda.Code.fromAsset(path.join(__dirname, '../../dist/lambda')),
       role: lambdaRole,
-      timeout: cdk.Duration.seconds(config.LAMBDA_TIMEOUT),
+      timeout: cdk.Duration.seconds(29),
       memorySize: config.LAMBDA_MEMORY,
       environment: {
         NODE_ENV: config.NODE_ENV,
@@ -138,6 +138,7 @@ export class InfrastructureStack extends cdk.Stack {
     const integration = new apigateway.LambdaIntegration(handler, {
       proxy: true,
       allowTestInvoke: true,
+      timeout: cdk.Duration.seconds(29),
     });
 
     // Add proxy resource to handle all routes with API key requirement

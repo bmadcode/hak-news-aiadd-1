@@ -30,10 +30,6 @@ cp -r ../src/* .
 cp ../../package.json .
 cp ../../package-lock.json .
 
-# Create templates directory and copy email template
-mkdir -p hacker-news/templates
-cp ../../src/hacker-news/templates/email.template.ejs hacker-news/templates/
-
 # Create Lambda handler
 echo "📝 Creating Lambda handler..."
 cat > lambda.js << 'EOL'
@@ -86,4 +82,4 @@ echo "✅ Deployment complete! Configuration saved to .env.production"
 
 # Print API URL
 API_URL=$(aws cloudformation describe-stacks --stack-name hak-news --query 'Stacks[0].Outputs[?OutputKey==`ApiUrl`].OutputValue' --output text)
-echo "�� API URL: $API_URL" 
+echo " API URL: $API_URL" 
