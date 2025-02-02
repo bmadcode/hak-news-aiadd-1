@@ -84,6 +84,16 @@ Create a service that sends daily summaries of the top **M** stories along with 
     - use a lambda function to add email addresses to the table
     - use a lambda function to remove email addresses from the table
 
+- Story 10: Cache HTML in DynamoDB & Async Optimization
+  - Constraint: Existing DynamoDB table is used to cache the summarized html in a row with a composite key PK of sub:hakdaily with SK of SUMMARY::DATE::<mmddyyyy>::count of posts::count of articles::count ofcomments
+  - Request will send sqs message to lambda function and response with a status code accepted
+  - Lambda function responding to the sqs message will have a 10 minute timeout
+  - Lambda function will check if the html is cached in dynamodb within the last 3 hours with the same count of posts, articles, and comments
+  - If the html is cached in dynamodb, update the row sent timestamp to the current datetime
+  - If the html is not cached in dynamodb, it will be created and then cached with the current datetime
+  - A Table Stream Trigger will fire to trigger another lambda function to send the email of the cached html to all subscribers
+  - The lambda function to send the email will have a 2 minute timeout
+
 ## Testing Strategy
 
 - **Unit Tests:** Test each unit of the application in isolation.
