@@ -24,7 +24,9 @@
     "test:e2e:prod": "TEST_ENV=prod playwright test",
     "deploy": "cd infrastructure && npm run deploy",
     "diff": "cd infrastructure && npm run diff",
-    "summarize": "curl -X POST http://localhost:3000/api/v1/hacker-news/summarized-stories -H 'Content-Type: application/json' -d '{\"numStories\": 10, \"numCommentsPerStory\": 30, \"maxSummaryLength\": 300}'",
+    "summarize": "curl -X POST http://localhost:3000/hacker-news/summarize -H 'Content-Type: application/json' -d '{\"numStories\": 2, \"numCommentsPerStory\": 3, \"maxSummaryLength\": 150}'",
+    "email": "curl -X POST http://localhost:3000/hacker-news/newsletter -H 'Content-Type: application/json' -d '{\"emails\": [\"btmadison74@gmail.com\"], \"numStories\": 2, \"numCommentsPerStory\": 3, \"maxSummaryLength\": 150}'",
+    "email:test": "curl -X POST http://localhost:3000/hacker-news/newsletter -H 'Content-Type: application/json' -d '{\"emails\": [\"test@example.com\"], \"numStories\": 1, \"numCommentsPerStory\": 2, \"maxSummaryLength\": 100}'",
     "summarize:prod": "node scripts/summarize-prod.js",
     "summarize:prod:quick": "node scripts/summarize-prod.js 3 5 200",
     "summarize:prod:detailed": "node scripts/summarize-prod.js 5 20 500"

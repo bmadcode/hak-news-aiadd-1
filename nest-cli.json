@@ -9,6 +9,7 @@
         "include": "**/*.ejs",
         "watchAssets": true
       }
-    ]
+    ],
+    "watchAssets": true
   }
 }

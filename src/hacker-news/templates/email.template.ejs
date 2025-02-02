@@ -16,6 +16,7 @@
             text-align: center;
             font-weight: bold;
             margin: 20px 0;
+            font-size: 1.2em;
         }
         .divider {
             text-align: center;
@@ -26,6 +27,8 @@
             margin-top: 30px;
             text-align: center;
             color: #666;
+            border-top: 1px solid #eee;
+            padding-top: 20px;
         }
         a {
             color: #2c3e50;
@@ -34,17 +37,54 @@
         a:hover {
             text-decoration: underline;
         }
+        .summary-label {
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #2c3e50;
+        }
+        .summary-content {
+            margin-left: 0;
+            margin-bottom: 15px;
+            line-height: 1.6;
+        }
+        .links {
+            margin: 10px 0;
+            font-size: 0.9em;
+        }
+        .links a {
+            margin-right: 15px;
+            color: #666;
+        }
+        .meta {
+            font-size: 0.9em;
+            color: #666;
+            margin: 5px 0;
+        }
     </style>
 </head>
 <body>
-    <p>This is the Daily Hacker News Top Summary from BMad for <%= date %></p>
+    <h1 style="text-align: center; color: #2c3e50;">Daily Hacker News Top Summary</h1>
+    <p style="text-align: center; color: #666;"><%= date %></p>
 
     <% stories.forEach((story, index) => { %>
-        <div class="story-title">Story <%= index + 1 %></div>
-        <p><a href="<%= story.url %>"><%= story.title %></a></p>
-        <p>Story <%= index + 1 %> Summary: <%= story.articleSummary.summary %></p>
-        <p>Story <%= index + 1 %> Comment Summary: <%= story.commentsSummary.summary %></p>
-        <div class="divider">***</div>
+        <div class="story-title">Story <%= index + 1 %>: <a href="<%= story.url %>"><%= story.title %></a></div>
+        
+        <div class="meta">
+            Score: <%= helpers.formatScore(story.score) %> | By: <%= story.by %> | Comments: <%= story.descendants %>
+        </div>
+
+        <div class="links">
+            <a href="<%= story.url %>">📰 Article Link</a>
+            <a href="https://news.ycombinator.com/item?id=<%= story.id %>">💬 Hacker News Discussion</a>
+        </div>
+
+        <div class="summary-label">Article Summary:</div>
+        <p class="summary-content"><%= story.articleSummary.summary %></p>
+
+        <div class="summary-label">Discussion Summary:</div>
+        <p class="summary-content"><%= story.commentsSummary.summary %></p>
+
+        <div class="divider">• • •</div>
     <% }); %>
 
     <div class="footer">

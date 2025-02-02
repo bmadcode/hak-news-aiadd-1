@@ -9,7 +9,10 @@ export class EmailTemplateService {
   private templatePath: string;
 
   constructor() {
-    this.templatePath = path.join(__dirname, '../templates/email.template.ejs');
+    this.templatePath = path.join(
+      process.cwd(),
+      'src/hacker-news/templates/email.template.ejs',
+    );
   }
 
   async generateEmailHtml(data: SummarizedStoriesResponseDto): Promise<string> {
