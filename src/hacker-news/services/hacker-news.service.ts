@@ -5,8 +5,8 @@ import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Cache } from 'cache-manager';
 import { Inject } from '@nestjs/common';
 import { firstValueFrom } from 'rxjs';
-import { ArticleScraperService } from './services/article-scraper.service';
-import { LLMService, SummarizedContent } from './services/llm.service';
+import { ArticleScraperService } from './article-scraper.service';
+import { LLMService, SummarizedContent } from './llm.service';
 
 interface HNStory {
   id: number;
@@ -156,7 +156,6 @@ export class HackerNewsService {
             this.logger.debug(
               `Comment ${commentId} has ${comment.kids.length} replies`,
             );
-            // Process child comments in parallel
             await Promise.all(
               comment.kids.map(async (kidId) => {
                 if (comments.length < numComments) {
@@ -175,7 +174,6 @@ export class HackerNewsService {
         }
       };
 
-      // Process top-level comments in parallel
       await Promise.all(
         story.kids.map(async (commentId) => {
           if (comments.length < numComments) {
@@ -188,14 +186,13 @@ export class HackerNewsService {
         `Successfully fetched ${comments.length} comments for story ${storyId}`,
       );
 
-      // Generate summary from comments
       const commentText = comments
         .map((comment) => `Comment by ${comment.by}: ${comment.text}`)
         .join('\n\n');
 
       const summary = await this.llmService.summarizeContent(
         commentText,
-        500, // reasonable length for comment summary
+        500,
         false,
       );
 
@@ -226,7 +223,6 @@ export class HackerNewsService {
         }`,
       );
 
-      // If it's a URL, fetch the content first
       let content = contentOrUrl;
       if (contentOrUrl.startsWith('http')) {
         this.logger.debug(`Fetching content from URL: ${contentOrUrl}`);
@@ -247,19 +243,11 @@ export class HackerNewsService {
       this.logger.debug(
         `Sending content to LLM service for summarization (length: ${content.length})`,
       );
-      const summary = await this.llmService.summarizeContent(
+      return await this.llmService.summarizeContent(
         content,
         maxLength,
         includeOriginal,
       );
-      this.logger.debug(
-        `Successfully generated summary (length: ${summary.summary.length})`,
-      );
-      this.logger.debug(
-        `Summary preview: ${summary.summary.substring(0, 100)}...`,
-      );
-
-      return summary;
     } catch (error: unknown) {
       const errorMessage =
         error instanceof Error ? error.message : 'Unknown error';
@@ -267,7 +255,7 @@ export class HackerNewsService {
         `Failed to summarize content: ${errorMessage}`,
         error instanceof Error ? error.stack : undefined,
       );
-      throw error instanceof Error ? error : new Error(errorMessage);
+      throw new Error('Failed to summarize content');
     }
   }
 }

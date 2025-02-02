@@ -7,13 +7,34 @@ import {
   Logger,
 } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
-import { HackerNewsService } from '../hacker-news.service';
+import { HackerNewsService } from '../services/hacker-news.service';
 import {
   SummarizedStoriesRequestDto,
   SummarizedStoriesResponseDto,
 } from '../dto/summarized-stories.dto';
 import { EmailService } from '../services/email.service';
 import { SubscriptionService } from '../services/subscription.service';
+
+interface Story {
+  id: number;
+  title: string;
+  url?: string;
+  score: number;
+  by: string;
+  time: number;
+  descendants: number;
+  kids?: number[];
+  articleSummary: {
+    summary: string;
+    summaryGeneratedAt: string;
+    tokenCount: number;
+  };
+  commentsSummary: {
+    summary: string;
+    summaryGeneratedAt: string;
+    tokenCount: number;
+  };
+}
 
 @ApiTags('hacker-news')
 @Controller('hacker-news')
@@ -30,13 +51,13 @@ export class HackerNewsController {
   @ApiOperation({
     summary: 'Get summarized Hacker News stories',
     description: `
-Retrieves and summarizes top Hacker News stories and their comments using AI.
-- Fetches the most recent top stories from Hacker News
-- Generates concise summaries of articles and comments using LLM
-- Supports configurable number of stories and comments
-- Includes metadata about processing time and token usage
-- Optional inclusion of original content alongside summaries
-- Rate limited to prevent abuse
+      Retrieves and summarizes top Hacker News stories and their comments using AI.
+      - Fetches the most recent top stories from Hacker News
+      - Generates concise summaries of articles and comments using LLM
+      - Supports configurable number of stories and comments
+      - Includes metadata about processing time and token usage
+      - Optional inclusion of original content alongside summaries
+      - Rate limited to prevent abuse
     `,
   })
   @ApiResponse({
@@ -80,7 +101,7 @@ Retrieves and summarizes top Hacker News stories and their comments using AI.
 
       // Process each story with summaries
       const summarizedStories = await Promise.all(
-        stories.map(async (story) => {
+        stories.map(async (story: Story) => {
           // Parallelize comment and article summarization
           const [commentsSummary, articleSummary] = await Promise.all([
             // Get comment summary
@@ -112,7 +133,7 @@ Retrieves and summarizes top Hacker News stories and their comments using AI.
 
       // Calculate total tokens used
       const totalTokens = summarizedStories.reduce(
-        (sum, story) =>
+        (sum: number, story: Story) =>
           sum +
           story.articleSummary.tokenCount +
           story.commentsSummary.tokenCount,
@@ -126,7 +147,7 @@ Retrieves and summarizes top Hacker News stories and their comments using AI.
           processingTimeMs: Date.now() - startTime,
           storiesRetrieved: summarizedStories.length,
           totalCommentsRetrieved: summarizedStories.reduce(
-            (acc, story) => acc + (story.descendants || 0),
+            (acc: number, story: Story) => acc + (story.descendants || 0),
             0,
           ),
           totalTokensUsed: totalTokens,

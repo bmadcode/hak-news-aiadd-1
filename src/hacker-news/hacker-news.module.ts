@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { HttpModule } from '@nestjs/axios';
 import { CacheModule } from '@nestjs/cache-manager';
 import { ConfigModule } from '@nestjs/config';
-import { HackerNewsService } from './hacker-news.service';
+import { HackerNewsService } from './services/hacker-news.service';
 import { HackerNewsController } from './controllers/hacker-news.controller';
 import { ArticleScraperService } from './services/article-scraper.service';
 import { LLMService } from './services/llm.service';

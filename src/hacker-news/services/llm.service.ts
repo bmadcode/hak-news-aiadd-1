@@ -108,32 +108,35 @@ export class LLMService {
     maxLength: number,
     includeOriginal = false,
   ): Promise<SummarizedContent> {
-    const contentHash = createHash('sha256')
-      .update(content + maxLength + includeOriginal)
-      .digest('hex');
-    const cacheKey = `summary-${contentHash}`;
-
-    this.logger.debug(
-      `Attempting to summarize content of length ${content.length}`,
-    );
-    this.logger.debug(`Content preview: ${content.substring(0, 100)}...`);
-
-    const cachedSummary =
-      await this.cacheManager.get<SummarizedContent>(cacheKey);
-    if (cachedSummary) {
-      this.logger.debug('Returning cached summary');
-      return cachedSummary;
-    }
-
     try {
+      const contentHash = createHash('sha256')
+        .update(content + maxLength + includeOriginal)
+        .digest('hex');
+      const cacheKey = `summary-${contentHash}`;
+
+      this.logger.debug(
+        `Attempting to summarize content of length ${content.length}`,
+      );
+      this.logger.debug(`Content preview: ${content.substring(0, 100)}...`);
+
+      const cachedSummary =
+        await this.cacheManager.get<SummarizedContent>(cacheKey);
+      if (cachedSummary) {
+        this.logger.debug('Returning cached summary');
+        return cachedSummary;
+      }
+
       const prompt = `Please provide a concise summary of the following content in ${maxLength} words or less:\n\n${content}`;
 
       this.logger.debug(
-        `Making request to ${this.isLocalLLM ? 'local' : 'remote'} LLM API with ${content.length} characters of content`,
+        `Making request to ${
+          this.isLocalLLM ? 'local' : 'remote'
+        } LLM API with ${content.length} characters of content`,
       );
 
       let response;
       if (this.isLocalLLM) {
+        // Ollama format
         const requestPayload = {
           model: this.model,
           prompt,
@@ -145,66 +148,49 @@ export class LLMService {
         };
 
         this.logger.debug(
-          `Local LLM request payload: ${JSON.stringify(requestPayload)}`,
+          `Local LLM request payload: ${JSON.stringify(requestPayload, null, 2)}`,
         );
-        this.logger.debug(`Local LLM endpoint: ${this.apiEndpoint}`);
 
-        try {
-          response = await firstValueFrom(
-            this.httpService.post<LocalLLMResponse>(
-              this.apiEndpoint,
-              requestPayload,
-              {
-                headers: {
-                  'Content-Type': 'application/json',
-                },
-                timeout: 120000,
+        response = await firstValueFrom(
+          this.httpService.post<LocalLLMResponse>(
+            this.apiEndpoint,
+            requestPayload,
+            {
+              headers: {
+                'Content-Type': 'application/json',
               },
-            ),
-          );
+              timeout: 30000,
+            },
+          ),
+        );
 
-          this.logger.debug(
-            `Local LLM response received. Status: ${response.status}`,
-          );
-          this.logger.debug(
-            `Local LLM response data: ${JSON.stringify(response.data)}`,
-          );
+        this.logger.debug(`Response status: ${response.status}`);
+        this.logger.debug(
+          `Response data: ${JSON.stringify(response.data, null, 2)}`,
+        );
 
-          if (!response.data.response) {
-            throw new Error('No response text received from LLM');
-          }
-
-          const filteredResponse = this.removeThinkingTags(
-            response.data.response,
+        if (!response.data.response) {
+          throw new Error(
+            `Invalid response format: ${JSON.stringify(response.data)}`,
           );
-
-          const summary: SummarizedContent = {
-            summary: filteredResponse.trim(),
-            summaryGeneratedAt: new Date().toISOString(),
-            tokenCount:
-              response.data.prompt_eval_count + response.data.eval_count,
-            ...(includeOriginal && { originalContent: content }),
-          };
-
-          this.logger.debug(`Generated summary: ${summary.summary}`);
-          await this.cacheManager.set(cacheKey, summary, 24 * 60 * 60 * 1000);
-          return summary;
-        } catch (localError) {
-          this.logger.error(
-            `Local LLM request failed: ${
-              localError instanceof Error ? localError.message : 'Unknown error'
-            }`,
-          );
-          if (localError instanceof AxiosError) {
-            this.logger.error(
-              `Local LLM response data: ${JSON.stringify(
-                localError.response?.data,
-              )}`,
-            );
-          }
-          throw localError;
         }
+
+        const filteredResponse = this.removeThinkingTags(
+          response.data.response,
+        );
+
+        const summary: SummarizedContent = {
+          summary: filteredResponse.trim(),
+          summaryGeneratedAt: new Date().toISOString(),
+          tokenCount:
+            response.data.prompt_eval_count + response.data.eval_count,
+          ...(includeOriginal && { originalContent: content }),
+        };
+
+        await this.cacheManager.set(cacheKey, summary, 24 * 60 * 60 * 1000);
+        return summary;
       } else {
+        // Remote LLM format (DeepSeek)
         const requestPayload = {
           model: this.model,
           messages: [
@@ -223,7 +209,11 @@ export class LLMService {
         };
 
         this.logger.debug(
-          `Remote LLM request payload: ${JSON.stringify(requestPayload)}`,
+          `Remote LLM request payload: ${JSON.stringify(
+            requestPayload,
+            null,
+            2,
+          )}`,
         );
 
         response = await firstValueFrom(
@@ -232,9 +222,20 @@ export class LLMService {
               Authorization: `Bearer ${this.apiKey}`,
               'Content-Type': 'application/json',
             },
-            timeout: 15000,
+            timeout: 30000,
           }),
         );
+
+        this.logger.debug(`Response status: ${response.status}`);
+        this.logger.debug(
+          `Response data: ${JSON.stringify(response.data, null, 2)}`,
+        );
+
+        if (!response.data.choices?.[0]?.message?.content) {
+          throw new Error(
+            `Invalid response format: ${JSON.stringify(response.data)}`,
+          );
+        }
 
         const filteredResponse = this.removeThinkingTags(
           response.data.choices[0].message.content,
@@ -250,22 +251,20 @@ export class LLMService {
         await this.cacheManager.set(cacheKey, summary, 24 * 60 * 60 * 1000);
         return summary;
       }
-    } catch (error: unknown) {
+    } catch (error) {
+      this.logger.error(
+        `Failed to summarize content: ${
+          error instanceof Error ? error.message : 'Unknown error'
+        }`,
+      );
+
       if (error instanceof AxiosError) {
         this.logger.error(
-          `LLM API Error: ${error.message}\nResponse: ${JSON.stringify(
-            error.response?.data,
-          )}\nConfig: ${JSON.stringify({
-            url: this.apiEndpoint,
-            model: this.model,
-            isLocal: this.isLocalLLM,
-          })}\nRequest Data: ${error.config?.data}`,
+          `API Error Response: ${JSON.stringify(error.response?.data)}`,
         );
-      } else {
-        const errorMessage =
-          error instanceof Error ? error.message : 'Unknown error';
-        this.logger.error(`Failed to generate summary: ${errorMessage}`);
+        this.logger.error(`API Error Config: ${JSON.stringify(error.config)}`);
       }
+
       throw new Error('Failed to generate content summary');
     }
   }
