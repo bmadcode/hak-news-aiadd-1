@@ -5,7 +5,11 @@ import * as iam from 'aws-cdk-lib/aws-iam';
 import { Construct } from 'constructs';
 import * as path from 'path';
 import { prodConfig, type EnvConfig } from '../config/env';
+import * as dotenv from 'dotenv';
 // import * as sqs from 'aws-cdk-lib/aws-sqs';
+
+// Load production environment variables
+dotenv.config({ path: path.join(__dirname, '../../.env.production') });
 
 export interface HakNewsStackProps extends cdk.StackProps {
   stage: 'dev' | 'prod';
@@ -106,10 +110,12 @@ export class InfrastructureStack extends cdk.Stack {
         LLM_RATE_LIMIT_PER_MINUTE:
           process.env.LLM_RATE_LIMIT_PER_MINUTE || '60',
         LLM_THINKING_TAG: process.env.LLM_THINKING_TAG || 'think',
+        // Load SMTP settings from .env.production
         SMTP_HOST: process.env.SMTP_HOST || '',
         SMTP_PORT: process.env.SMTP_PORT || '587',
         SMTP_USER: process.env.SMTP_USER || '',
         SMTP_PASS: process.env.SMTP_PASS || '',
+        TEST_EMAIL_RECIPIENTS: process.env.TEST_EMAIL_RECIPIENTS || '',
       },
     });
 

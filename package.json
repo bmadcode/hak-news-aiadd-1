@@ -28,8 +28,9 @@
     "email": "curl -X POST http://localhost:3000/hacker-news/newsletter -H 'Content-Type: application/json' -d '{\"emails\": [\"btmadison74@gmail.com\"], \"numStories\": 2, \"numCommentsPerStory\": 3, \"maxSummaryLength\": 150}'",
     "email:test": "curl -X POST http://localhost:3000/hacker-news/newsletter -H 'Content-Type: application/json' -d '{\"emails\": [\"test@example.com\"], \"numStories\": 1, \"numCommentsPerStory\": 2, \"maxSummaryLength\": 100}'",
     "summarize:prod": "node scripts/summarize-prod.js",
-    "summarize:prod:quick": "node scripts/summarize-prod.js 3 5 200",
-    "summarize:prod:detailed": "node scripts/summarize-prod.js 5 20 500"
+    "email:prod": "node scripts/email-prod.js",
+    "email:prod:quick": "node scripts/email-prod.js --stories=3 --comments=5 --length=200",
+    "email:prod:detailed": "node scripts/email-prod.js --stories=5 --comments=20 --length=500"
   },
   "dependencies": {
     "@nestjs/axios": "^3.0.1",
@@ -46,6 +47,7 @@
     "cheerio": "^1.0.0",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.1",
+    "ejs": "^3.1.9",
     "joi": "^17.13.3",
     "limiter": "^3.0.0",
     "nodemailer": "^6.10.0",
@@ -70,6 +72,7 @@
     "@types/nodemailer": "^6.4.17",
     "@typescript-eslint/eslint-plugin": "^6.0.0",
     "@typescript-eslint/parser": "^6.0.0",
+    "commander": "^13.1.0",
     "dotenv": "^16.4.7",
     "eslint": "^8.42.0",
     "eslint-config-prettier": "^9.0.0",
