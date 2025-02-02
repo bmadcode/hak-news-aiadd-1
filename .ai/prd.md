@@ -84,15 +84,32 @@ Create a service that sends daily summaries of the top **M** stories along with 
     - use a lambda function to add email addresses to the table
     - use a lambda function to remove email addresses from the table
 
-- Story 10: Cache HTML in DynamoDB & Async Optimization
-  - Constraint: Existing DynamoDB table is used to cache the summarized html in a row with a composite key PK of sub:hakdaily with SK of SUMMARY::DATE::<mmddyyyy>::count of posts::count of articles::count ofcomments
-  - Request will send sqs message to lambda function and response with a status code accepted
-  - Lambda function responding to the sqs message will have a 10 minute timeout
-  - Lambda function will check if the html is cached in dynamodb within the last 3 hours with the same count of posts, articles, and comments
-  - If the html is cached in dynamodb, update the row sent timestamp to the current datetime
-  - If the html is not cached in dynamodb, it will be created and then cached with the current datetime
-  - A Table Stream Trigger will fire to trigger another lambda function to send the email of the cached html to all subscribers
-  - The lambda function to send the email will have a 2 minute timeout
+- Story 10: Add a Dev Environment to test new changes without breaking production
+  - Add a dev environment to test new changes without breaking production
+  - Ensure we are able to deploy to dev and production environments with different commands (same env vars come from .env.production) and both work exactly the same
+- Story 11: Cache HTML in DynamoDB & Async Optimization
+  - Task 1:The existing Summaries API Route will be updated to ONLY do the following:
+    - Post Body modified to include a subscriptionId (HakNewsDaily)
+    - Write a row to the DynamoDB table with the following properties:
+      - PK: SUB::SUMMARY
+      - SK: SUMMARY::<mmddyyyy>::HakNewsDaily::POSTCOUNT::COMMENTCOUNT (ex. SUMMARY::20250202::HakNewsDaily::10::10)
+      - dtCreated: DateTime of the summary row creation
+      - dtSummarized: default null, DateTime of the summary generation added to the row when summaryHtml is updated
+      - summaryHtml: '' // on create this is empty string
+    - The Row will have a TTL of (subscriptionTTL from env vars) hours
+    - The response will be a 202 Accepted status code
+    - Ensure the call to the route no longer:
+      - Gets HN articles or comments before responding
+      - Calls the LLM service before responding
+      - Caches the HTML in DynamoDB before responding
+      - Sends the email before responding
+  - Task 2: Create TST and Create Lambda to handle to generate the summary and send the email
+    - TST on dyanmo table on create or update of a row with the pk of SUB::SUMMARY
+      - Lambda TST controller will: - If the row summaryHtml is ('' or null) AND date is today, then: - Get the HN articles and comments based on the values in the row SK with the hacker-news service - Call the llm service to summarize the articles and comments and store the summaryHtml in the row - Use the same template that the email service was using, but refactor so it is replicated in this lambda (a later task will remove it from the email service) - If the row summaryHtml is not ('' or null) AND date is today, then DO NOTHING but log a message to the console - If the row date is not today, then DO NOTHING but log a message to the console
+        -Task 3: The TST controller will be updated to use the email service to send the emails of the summaryHtml to the email addresses in the row
+      - The email service will have a new function that takes in as a param the htmlSummary and the subscriptionId
+      - The email service will send the email to the esubscribers defined in dynamo table with the pk of `sub:hakdaily`
+      - The email service no longer needs to take in json and generate the html, it will just take in the html and send the email, this code can be refactored out of the email service
 
 ## Testing Strategy
 
