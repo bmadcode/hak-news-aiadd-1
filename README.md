@@ -6,6 +6,8 @@ This repository remains a valuable reference for the AIADD (Ai Agentic Driven De
 
 You can view a .ai folder that has the prd. that drove the AI to produce each story in that folder and implement them each 1 at a time. Each numbered story is only created in that folder by the AI after the previous we agree is complete. This magic happens due to the .cursorrules file in the root of the project. The current best model in cursor for this is Claude 3.5 Sonnet. Others are still to wonky to reliable create and modify the story md files against the proper template, and also just generally do not follow our agreed upon working model.
 
+* Note: The structure for this nest project is pretty bad, first time using nextJS - lot of improvement in next version will be specified in the PRD, along with more modern nodeJS 20+ features (such as no need for dotenv anymore)
+
 TL;DR:
 
 If you would like to try this out, clone the repo and delete everything aside from, jump in to Composer Agent mode, and have fun:
