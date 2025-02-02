@@ -2,6 +2,7 @@ import * as cdk from 'aws-cdk-lib';
 import * as apigateway from 'aws-cdk-lib/aws-apigateway';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as iam from 'aws-cdk-lib/aws-iam';
+import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
 import { Construct } from 'constructs';
 import * as path from 'path';
 import { prodConfig, type EnvConfig } from '../config/env';
@@ -44,6 +45,18 @@ export class InfrastructureStack extends cdk.Stack {
       SMTP_USER: process.env.SMTP_USER ?? '',
       SMTP_PASS: process.env.SMTP_PASS ?? '',
     };
+
+    // Create DynamoDB table for email subscriptions
+    const subscriptionsTable = new dynamodb.Table(this, 'EmailSubscriptions', {
+      tableName: 'hak-news-subscriptions',
+      partitionKey: { name: 'pk', type: dynamodb.AttributeType.STRING },
+      sortKey: { name: 'sk', type: dynamodb.AttributeType.STRING },
+      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+      removalPolicy: cdk.RemovalPolicy.RETAIN,
+      pointInTimeRecovery: true,
+    });
+
+    // No GSI needed as we'll query by pk for all emails
 
     // Create API Gateway
     const api = new apigateway.RestApi(this, 'HakNewsApi', {
@@ -116,6 +129,8 @@ export class InfrastructureStack extends cdk.Stack {
         SMTP_USER: process.env.SMTP_USER || '',
         SMTP_PASS: process.env.SMTP_PASS || '',
         TEST_EMAIL_RECIPIENTS: process.env.TEST_EMAIL_RECIPIENTS || '',
+        SUBSCRIPTIONS_TABLE_NAME: subscriptionsTable.tableName,
+        SUBSCRIPTIONS_TABLE_STATUS_INDEX: 'StatusIndex',
       },
     });
 
@@ -133,6 +148,9 @@ export class InfrastructureStack extends cdk.Stack {
       },
     });
 
+    // Grant DynamoDB permissions to Lambda
+    subscriptionsTable.grantReadWriteData(handler);
+
     // Export important values
     new cdk.CfnOutput(this, 'ApiUrl', {
       value: api.url,
@@ -142,6 +160,12 @@ export class InfrastructureStack extends cdk.Stack {
     new cdk.CfnOutput(this, 'ApiKeyId', {
       value: apiKey.keyId,
       description: 'API Key ID',
+    });
+
+    // Export DynamoDB table name
+    new cdk.CfnOutput(this, 'SubscriptionsTableName', {
+      value: subscriptionsTable.tableName,
+      description: 'DynamoDB table name for email subscriptions',
     });
 
     // The code that defines your stack goes here

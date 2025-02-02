@@ -79,7 +79,10 @@ Create a service that sends daily summaries of the top **M** stories along with 
 
           [Unsubscribe](https://www.youtube.com/watch?v=dQw4w9WgXcQ)
 
-  - use nodemailer to send the emails
+  - Story 9: use email subscriptions to send the emails
+    - use a dynamodb table to store the email addresses
+    - use a lambda function to add email addresses to the table
+    - use a lambda function to remove email addresses from the table
 
 ## Testing Strategy
 

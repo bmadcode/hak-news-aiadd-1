@@ -8,6 +8,7 @@ import { ArticleScraperService } from './services/article-scraper.service';
 import { LLMService } from './services/llm.service';
 import { EmailService } from './services/email.service';
 import { EmailTemplateService } from './services/email-template.service';
+import { SubscriptionModule } from './subscription.module';
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { EmailTemplateService } from './services/email-template.service';
       max: 100, // Maximum number of items in cache
     }),
     ConfigModule,
+    SubscriptionModule,
   ],
   controllers: [HackerNewsController],
   providers: [
