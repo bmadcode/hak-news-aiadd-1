@@ -28,6 +28,7 @@ Story Points: 2
 6. - [ ] Unsubscribe link in email template updated to use actual unsubscribe endpoint
 7. - [x] Unit tests achieving 80% coverage for new functionality
 8. - [x] E2E tests for subscription management flow
+9. - [ ] Automatic email sending to subscribers when summarize API is called
 
 ## Subtasks
 
@@ -47,11 +48,17 @@ Story Points: 2
 4. - [ ] API Integration
    1. - [x] Create API endpoints in API Gateway
    2. - [ ] Update email template with dynamic unsubscribe link
-   3. - [ ] Integrate with existing email service
+   3. - [x] Integrate with existing email service
 5. - [ ] Testing
    1. - [x] Write unit tests for subscription service
    2. - [ ] Write E2E tests for subscription flow
    3. - [ ] Update existing email service tests
+6. - [x] Subscriber Email Integration
+   1. - [x] Make emails parameter optional in summarize API
+   2. - [x] Fetch subscribers from DynamoDB when summarize API is called
+   3. - [x] Merge provided emails with subscriber list
+   4. - [x] Update email service to handle larger recipient lists
+   5. - [x] Add error handling for email delivery failures
 
 ## Constraints
 
@@ -182,10 +189,36 @@ The following environment variables are set in the Lambda function:
   3. Deploy Lambda function updates
   4. Update email template with unsubscribe endpoint
 
+2024-02-02 (Update 5):
+
+- Integrated subscription service with email functionality:
+  - Made emails parameter optional in newsletter endpoint
+  - Added automatic subscriber fetching from DynamoDB
+  - Implemented merging of subscribers with provided emails
+  - Added comprehensive error handling
+  - Updated response to include recipient statistics
+- Next steps:
+  1. Update email template with dynamic unsubscribe link
+  2. Complete E2E tests for subscription flow
+  3. Test in production environment
+
+2024-02-02 (Update 6):
+
+- Fixed email template integration:
+  - Created email template following PRD specifications
+  - Added proper template path configuration
+  - Implemented dynamic unsubscribe link
+  - Tested email delivery to subscribers
+  - Verified subscriber list management
+- Next steps:
+  1. Complete E2E tests for subscription flow
+  2. Deploy to production
+  3. Test unsubscribe functionality in production
+
 ## Deployment Checklist
 
-- [ ] Deploy DynamoDB table via CDK
-- [ ] Update API Gateway with new routes
-- [ ] Deploy Lambda function with subscription handlers
+- [x] Deploy DynamoDB table via CDK
+- [x] Update API Gateway with new routes
+- [x] Deploy Lambda function with subscription handlers
 - [ ] Test all endpoints in production
-- [ ] Update email template with unsubscribe link
+- [x] Update email template with unsubscribe link

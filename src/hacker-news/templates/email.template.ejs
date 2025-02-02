@@ -47,14 +47,6 @@
             margin-bottom: 15px;
             line-height: 1.6;
         }
-        .links {
-            margin: 10px 0;
-            font-size: 0.9em;
-        }
-        .links a {
-            margin-right: 15px;
-            color: #666;
-        }
         .meta {
             font-size: 0.9em;
             color: #666;
@@ -64,34 +56,32 @@
 </head>
 <body>
     <h1 style="text-align: center; color: #2c3e50;">Daily Hacker News Top Summary</h1>
-    <p style="text-align: center; color: #666;"><%= date %></p>
+    <p style="text-align: center; color: #666;">from BMad for <%= date %></p>
 
     <% stories.forEach((story, index) => { %>
-        <div class="story-title">Story <%= index + 1 %>: <a href="<%= story.url %>"><%= story.title %></a></div>
+        <div class="story-title">Story <%= index + 1 %></div>
+        <p><a href="<%= story.url %>"><%= story.title %></a></p>
+        
+        <div class="summary-label">Story Summary:</div>
+        <div class="summary-content"><%= story.articleSummary.summary %></div>
+        
+        <div class="summary-label">Comment Summary:</div>
+        <div class="summary-content"><%= story.commentsSummary.summary %></div>
         
         <div class="meta">
-            Score: <%= helpers.formatScore(story.score) %> | By: <%= story.by %> | Comments: <%= story.descendants %>
+            <span>Score: <%= story.score %></span> |
+            <span>Comments: <%= story.descendants %></span> |
+            <span>By: <%= story.by %></span>
         </div>
-
-        <div class="links">
-            <a href="<%= story.url %>">📰 Article Link</a>
-            <a href="https://news.ycombinator.com/item?id=<%= story.id %>">💬 Hacker News Discussion</a>
-        </div>
-
-        <div class="summary-label">Article Summary:</div>
-        <p class="summary-content"><%= story.articleSummary.summary %></p>
-
-        <div class="summary-label">Discussion Summary:</div>
-        <p class="summary-content"><%= story.commentsSummary.summary %></p>
-
-        <div class="divider">• • •</div>
+        
+        <div class="divider">***</div>
     <% }); %>
 
     <div class="footer">
         <p>Thank you for subscribing to the BMad Hacker News Summary</p>
         <p>- Brian BMad Madison</p>
         <p>You can unsubscribe at any time by clicking the link below</p>
-        <p><a href="https://www.youtube.com/watch?v=dQw4w9WgXcQ">Unsubscribe</a></p>
+        <p><a href="http://localhost:3000/subscriptions?email=<%= locals.email %>&type=hakdaily" style="color: #666;">Unsubscribe</a></p>
     </div>
 </body>
 </html> 

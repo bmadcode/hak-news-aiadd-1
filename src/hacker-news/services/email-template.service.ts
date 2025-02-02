@@ -11,7 +11,7 @@ export class EmailTemplateService {
   constructor() {
     this.templatePath = path.join(
       process.cwd(),
-      'hacker-news/templates/email.template.ejs',
+      'src/hacker-news/templates/email.template.ejs',
     );
   }
 
